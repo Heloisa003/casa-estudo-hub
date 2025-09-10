@@ -2,39 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Fushub Design System - Cores baseadas na paleta especificada */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Fushub Color Palette */
+    --fushub-navy: 240 100% 12%;        /* #00003D - Azul-escuro */
+    --fushub-blue: 205 85% 56%;         /* #2D9FF0 - Azul-claro */
+    --fushub-yellow: 44 97% 63%;        /* #FDCA40 - Amarelo */
+    --fushub-white: 240 100% 99%;       /* #FDFDFF - Branco */
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--fushub-navy)), hsl(var(--fushub-blue)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--fushub-yellow)), hsl(44 90% 70%));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--fushub-navy)) 0%, hsl(var(--fushub-blue)) 100%);
+    
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -2px hsl(var(--fushub-navy) / 0.1);
+    --shadow-medium: 0 8px 30px -4px hsl(var(--fushub-navy) / 0.15);
+    --shadow-strong: 0 12px 40px -8px hsl(var(--fushub-navy) / 0.2);
+    --shadow-yellow: 0 4px 20px -2px hsl(var(--fushub-yellow) / 0.3);
+    
+    /* Design System Colors */
+    --background: 240 100% 99%;
+    --foreground: 240 100% 12%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 240 100% 99%;
+    --card-foreground: 240 100% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 240 100% 99%;
+    --popover-foreground: 240 100% 12%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 240 100% 12%;
+    --primary-foreground: 240 100% 99%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 205 85% 56%;
+    --secondary-foreground: 240 100% 99%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 20% 96%;
+    --muted-foreground: 240 30% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 44 97% 63%;
+    --accent-foreground: 240 100% 12%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 240 100% 99%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 240 30% 90%;
+    --input: 240 30% 92%;
+    --ring: 205 85% 56%;
 
     --radius: 0.5rem;
 
@@ -56,41 +72,42 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 240 100% 12%;
+    --foreground: 240 100% 99%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 240 80% 15%;
+    --card-foreground: 240 100% 99%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 240 80% 15%;
+    --popover-foreground: 240 100% 99%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 240 100% 99%;
+    --primary-foreground: 240 100% 12%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 205 85% 56%;
+    --secondary-foreground: 240 100% 99%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 240 50% 20%;
+    --muted-foreground: 240 30% 70%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 44 97% 63%;
+    --accent-foreground: 240 100% 12%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 240 100% 99%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 240 50% 25%;
+    --input: 240 50% 25%;
+    --ring: 205 85% 56%;
+    
+    --sidebar-background: 240 80% 10%;
+    --sidebar-foreground: 240 100% 95%;
+    --sidebar-primary: 205 85% 56%;
+    --sidebar-primary-foreground: 240 100% 99%;
+    --sidebar-accent: 240 50% 20%;
+    --sidebar-accent-foreground: 240 100% 95%;
+    --sidebar-border: 240 50% 25%;
+    --sidebar-ring: 205 85% 56%;
   }
 }
 
@@ -100,6 +117,34 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  /* Custom animations */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
   }
 }
