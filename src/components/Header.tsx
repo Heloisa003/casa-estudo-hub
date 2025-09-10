@@ -18,25 +18,27 @@ const Header = () => {
 
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-foreground hover:text-secondary transition-colors">
+            <a href="/search" className="text-foreground hover:text-secondary transition-colors">
               Buscar Vagas
             </a>
-            <a href="#" className="text-foreground hover:text-secondary transition-colors">
+            <a href="/dashboard" className="text-foreground hover:text-secondary transition-colors">
               Cadastrar Imóvel
             </a>
-            <a href="#" className="text-foreground hover:text-secondary transition-colors">
+            <a href="/how-it-works" className="text-foreground hover:text-secondary transition-colors">
               Como Funciona
             </a>
           </nav>
 
           {/* Actions */}
           <div className="flex items-center space-x-3">
-            <Button variant="nav" size="sm" className="hidden sm:inline-flex">
-              <User className="w-4 h-4" />
-              Entrar
+            <Button variant="nav" size="sm" className="hidden sm:inline-flex" asChild>
+              <a href="/login">
+                <User className="w-4 h-4" />
+                Entrar
+              </a>
             </Button>
-            <Button variant="cta" size="sm">
-              Cadastrar
+            <Button variant="cta" size="sm" asChild>
+              <a href="/login">Cadastrar</a>
             </Button>
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="w-5 h-5" />

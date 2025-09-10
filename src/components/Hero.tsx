@@ -50,11 +50,11 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <Button variant="cta" size="xl">
-              Sou Estudante
+            <Button variant="cta" size="xl" asChild>
+              <a href="/login">Sou Estudante</a>
             </Button>
-            <Button variant="nav" size="xl" className="bg-white/10 text-white border-white/30 hover:bg-white/20">
-              Sou Proprietário
+            <Button variant="nav" size="xl" className="bg-white/10 text-white border-white/30 hover:bg-white/20" asChild>
+              <a href="/login">Sou Proprietário</a>
             </Button>
           </div>
         </div>

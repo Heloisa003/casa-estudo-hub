@@ -67,9 +67,11 @@ const FeaturedProperties = () => {
         </div>
 
         <div className="text-center mt-12">
-          <Button variant="hero" size="lg" className="group">
-            Ver Todas as Vagas
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          <Button variant="hero" size="lg" asChild>
+            <a href="/search" className="group">
+              Ver Todas as Vagas
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </a>
           </Button>
         </div>
       </div>
