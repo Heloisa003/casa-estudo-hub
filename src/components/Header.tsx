@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Search, Menu, User, Home } from "lucide-react";
+import { Search, Menu, User } from "lucide-react";
+import fushubLogo from "@/assets/fushub-logo.png";
 
 const Header = () => {
   return (
@@ -7,14 +8,16 @@ const Header = () => {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center">
-              <Home className="w-5 h-5 text-white" />
-            </div>
+          <a href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <img 
+              src={fushubLogo} 
+              alt="Fushub Logo" 
+              className="w-10 h-10 object-contain"
+            />
             <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Fushub
             </span>
-          </div>
+          </a>
 
           {/* Navigation - Desktop */}
           <nav className="hidden md:flex items-center space-x-8">

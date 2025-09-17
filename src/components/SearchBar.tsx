@@ -4,9 +4,9 @@ import { MapPin, Search, Users, DollarSign } from "lucide-react";
 
 const SearchBar = () => {
   return (
-    <div className="w-full max-w-4xl mx-auto animate-slide-up">
-      <div className="bg-card rounded-2xl shadow-strong p-6 border border-border/50">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="w-full max-w-4xl mx-auto animate-slide-up px-4">
+      <div className="bg-card rounded-2xl shadow-strong p-4 sm:p-6 border border-border/50">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Localização */}
           <div className="relative">
             <label className="text-sm font-medium text-muted-foreground mb-2 block">
@@ -52,7 +52,7 @@ const SearchBar = () => {
           </div>
 
           {/* Botão de Busca */}
-          <div className="flex items-end">
+          <div className="flex items-end sm:col-span-2 lg:col-span-1">
             <Button variant="hero" size="lg" className="w-full h-12">
               <Search className="w-4 h-4" />
               Buscar

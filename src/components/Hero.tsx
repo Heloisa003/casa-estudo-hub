@@ -15,31 +15,31 @@ const Hero = () => {
         <div className="text-center space-y-8 animate-fade-in">
           {/* Headline */}
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight">
               Encontre sua
               <span className="block bg-gradient-accent bg-clip-text text-transparent">
                 moradia ideal
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl md:text-2xl text-white/80 max-w-3xl mx-auto px-4">
               Conectamos estudantes a proprietários de imóveis, repúblicas 
               e vagas próximas à sua universidade
             </p>
           </div>
 
           {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-8 text-white/90">
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold">50k+</div>
-              <div className="text-sm">Estudantes ativos</div>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-8 text-white/90 px-4">
+            <div className="text-center min-w-[100px]">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold">50k+</div>
+              <div className="text-xs sm:text-sm">Estudantes ativos</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold">5k+</div>
-              <div className="text-sm">Imóveis disponíveis</div>
+            <div className="text-center min-w-[100px]">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold">5k+</div>
+              <div className="text-xs sm:text-sm">Imóveis disponíveis</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold">200+</div>
-              <div className="text-sm">Cidades atendidas</div>
+            <div className="text-center min-w-[100px]">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold">200+</div>
+              <div className="text-xs sm:text-sm">Cidades atendidas</div>
             </div>
           </div>
 
@@ -49,11 +49,11 @@ const Hero = () => {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <Button variant="cta" size="xl" asChild>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8 px-4">
+            <Button variant="cta" size="xl" className="w-full sm:w-auto" asChild>
               <a href="/login">Sou Estudante</a>
             </Button>
-            <Button variant="nav" size="xl" className="bg-white/10 text-white border-white/30 hover:bg-white/20" asChild>
+            <Button variant="nav" size="xl" className="bg-white/10 text-white border-white/30 hover:bg-white/20 w-full sm:w-auto" asChild>
               <a href="/login">Sou Proprietário</a>
             </Button>
           </div>
