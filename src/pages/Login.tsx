@@ -1,133 +1,218 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Eye, EyeOff, Loader2, User, Home } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { z } from "zod";
 import Header from "@/components/Header";
-import { Eye, EyeOff, Mail, Lock, User, Phone, Home, Facebook, Chrome } from "lucide-react";
+
+const loginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
+});
+
+const signupSchema = z.object({
+  full_name: z.string().min(3, "Nome deve ter no mínimo 3 caracteres"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
+  phone: z.string().min(10, "Telefone inválido").optional().or(z.literal("")),
+  university: z.string().optional(),
+  user_type: z.enum(["student", "owner"]),
+  terms: z.boolean().refine((val) => val === true, "Você deve aceitar os termos"),
+});
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { user, signIn, signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [userType, setUserType] = useState<'student' | 'owner'>('student');
+  const [userType, setUserType] = useState<"student" | "owner">("student");
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrors({});
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+    };
+
+    try {
+      loginSchema.parse(data);
+      const { error } = await signIn(data.email, data.password);
+      
+      if (!error) {
+        navigate("/");
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrors({});
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      full_name: formData.get("full_name") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      phone: formData.get("phone") as string,
+      university: formData.get("university") as string,
+      user_type: userType,
+      terms: formData.get("terms") === "on",
+    };
+
+    try {
+      signupSchema.parse(data);
+      const { error } = await signUp(data.email, data.password, {
+        full_name: data.full_name,
+        phone: data.phone,
+        university: data.university,
+        user_type: data.user_type,
+      });
+      
+      if (!error) {
+        navigate("/");
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-20 py-12">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="max-w-md mx-auto">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-hero rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Home className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
-                Bem-vindo à Fushub
-              </h1>
-              <p className="text-muted-foreground">
-                Entre na sua conta ou crie uma nova
-              </p>
+      <main className="pt-20 pb-12">
+        <div className="container mx-auto px-4 max-w-md">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-hero rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Home className="w-8 h-8 text-white" />
             </div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Bem-vindo ao Fushub</h1>
+            <p className="text-muted-foreground">Entre ou crie sua conta para continuar</p>
+          </div>
 
-            <Tabs defaultValue="login" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="register">Cadastrar</TabsTrigger>
-              </TabsList>
+          <Card className="shadow-medium">
+            <CardContent className="p-6">
+              <Tabs defaultValue="login" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="login">Entrar</TabsTrigger>
+                  <TabsTrigger value="register">Cadastrar</TabsTrigger>
+                </TabsList>
 
-              {/* Login Tab */}
-              <TabsContent value="login">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">Entrar na sua conta</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Social Login */}
-                    <div className="space-y-3">
-                      <Button variant="outline" className="w-full" size="lg">
-                        <Chrome className="w-5 h-5 mr-2" />
-                        Continuar com Google
-                      </Button>
-                      <Button variant="outline" className="w-full" size="lg">
-                        <Facebook className="w-5 h-5 mr-2" />
-                        Continuar com Facebook
-                      </Button>
+                <TabsContent value="login">
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email</Label>
+                      <Input
+                        id="login-email"
+                        name="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        required
+                        className={errors.email ? "border-destructive" : ""}
+                      />
+                      {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
 
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-border" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                          Ou continue com email
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Form */}
-                    <form className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Senha</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                          type="email"
-                          placeholder="seu@email.com"
-                          className="pl-10 h-12"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
+                          id="login-password"
+                          name="password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="Sua senha"
-                          className="pl-10 pr-10 h-12"
+                          placeholder="••••••"
+                          required
+                          className={errors.password ? "border-destructive" : ""}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
+                      {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                    </div>
 
-                      <div className="flex items-center justify-between">
-                        <label className="flex items-center space-x-2">
-                          <input type="checkbox" className="rounded" />
-                          <span className="text-sm">Lembrar de mim</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="remember" />
+                        <label htmlFor="remember" className="text-muted-foreground cursor-pointer">
+                          Lembrar-me
                         </label>
-                        <a href="#" className="text-sm text-secondary hover:underline">
-                          Esqueci minha senha
-                        </a>
                       </div>
+                      <a href="#" className="text-secondary hover:underline">
+                        Esqueceu a senha?
+                      </a>
+                    </div>
 
-                      <Button variant="hero" className="w-full" size="lg">
-                        Entrar
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                    <Button type="submit" variant="hero" className="w-full hover:scale-105 transition-transform" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Entrando...
+                        </>
+                      ) : (
+                        "Entrar"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
 
-              {/* Register Tab */}
-              <TabsContent value="register">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-xl">Criar nova conta</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* User Type Selection */}
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium">Você é:</label>
-                      <div className="grid grid-cols-2 gap-3">
+                <TabsContent value="register">
+                  <form onSubmit={handleSignup} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Tipo de usuário</Label>
+                      <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
-                          onClick={() => setUserType('student')}
-                          className={`p-4 border rounded-lg text-center transition-colors ${
-                            userType === 'student' 
-                              ? 'border-secondary bg-secondary/10 text-secondary' 
-                              : 'border-border hover:border-secondary/50'
+                          onClick={() => setUserType("student")}
+                          className={`p-4 border rounded-lg text-center transition-all ${
+                            userType === "student" 
+                              ? "border-secondary bg-secondary/10 text-secondary scale-105" 
+                              : "border-border hover:border-secondary/50 hover:scale-105"
                           }`}
                         >
                           <User className="w-6 h-6 mx-auto mb-2" />
@@ -136,11 +221,11 @@ const Login = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setUserType('owner')}
-                          className={`p-4 border rounded-lg text-center transition-colors ${
-                            userType === 'owner' 
-                              ? 'border-secondary bg-secondary/10 text-secondary' 
-                              : 'border-border hover:border-secondary/50'
+                          onClick={() => setUserType("owner")}
+                          className={`p-4 border rounded-lg text-center transition-all ${
+                            userType === "owner" 
+                              ? "border-secondary bg-secondary/10 text-secondary scale-105" 
+                              : "border-border hover:border-secondary/50 hover:scale-105"
                           }`}
                         >
                           <Home className="w-6 h-6 mx-auto mb-2" />
@@ -150,96 +235,116 @@ const Login = () => {
                       </div>
                     </div>
 
-                    {/* Form */}
-                    <form className="space-y-4">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Nome"
-                            className="pl-10 h-12"
-                          />
-                        </div>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Sobrenome"
-                            className="pl-10 h-12"
-                          />
-                        </div>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="full_name">Nome completo</Label>
+                      <Input
+                        id="full_name"
+                        name="full_name"
+                        type="text"
+                        placeholder="João Silva"
+                        required
+                        className={errors.full_name ? "border-destructive" : ""}
+                      />
+                      {errors.full_name && <p className="text-sm text-destructive">{errors.full_name}</p>}
+                    </div>
 
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <div className="space-y-2">
+                      <Label htmlFor="register-email">Email</Label>
+                      <Input
+                        id="register-email"
+                        name="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        required
+                        className={errors.email ? "border-destructive" : ""}
+                      />
+                      {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefone</Label>
+                      <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="(11) 99999-9999"
+                        className={errors.phone ? "border-destructive" : ""}
+                      />
+                      {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+                    </div>
+
+                    {userType === "student" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="university">Universidade</Label>
                         <Input
-                          type="email"
-                          placeholder="seu@email.com"
-                          className="pl-10 h-12"
+                          id="university"
+                          name="university"
+                          type="text"
+                          placeholder="USP, UNICAMP, etc."
                         />
                       </div>
+                    )}
 
+                    <div className="space-y-2">
+                      <Label htmlFor="register-password">Senha</Label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
-                          placeholder="(11) 99999-9999"
-                          className="pl-10 h-12"
-                        />
-                      </div>
-
-                      {userType === 'student' && (
-                        <Input
-                          placeholder="Universidade/Faculdade"
-                          className="h-12"
-                        />
-                      )}
-
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
+                          id="register-password"
+                          name="password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="Crie uma senha"
-                          className="pl-10 pr-10 h-12"
+                          placeholder="••••••"
+                          required
+                          className={errors.password ? "border-destructive" : ""}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
+                      {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                    </div>
 
-                      <div className="space-y-3">
-                        <label className="flex items-start space-x-2">
-                          <input type="checkbox" className="rounded mt-1" />
-                          <span className="text-sm text-muted-foreground">
-                            Li e aceito os <a href="#" className="text-secondary hover:underline">Termos de Uso</a> e 
-                            a <a href="#" className="text-secondary hover:underline">Política de Privacidade</a>
-                          </span>
-                        </label>
-                        <label className="flex items-start space-x-2">
-                          <input type="checkbox" className="rounded mt-1" />
-                          <span className="text-sm text-muted-foreground">
-                            Aceito receber comunicações por email sobre ofertas e novidades
-                          </span>
+                    <div className="space-y-3">
+                      <div className="flex items-start space-x-2">
+                        <Checkbox id="terms" name="terms" className={errors.terms ? "border-destructive" : ""} />
+                        <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
+                          Aceito os <a href="#" className="text-secondary hover:underline">termos de uso</a> e{" "}
+                          <a href="#" className="text-secondary hover:underline">política de privacidade</a>
                         </label>
                       </div>
+                      {errors.terms && <p className="text-sm text-destructive">{errors.terms}</p>}
 
-                      <Button variant="hero" className="w-full" size="lg">
-                        Criar conta
-                      </Button>
-                    </form>
-
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground">
-                        Ao se cadastrar, você concorda com a verificação de identidade
-                      </p>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="newsletter" />
+                        <label htmlFor="newsletter" className="text-sm text-muted-foreground cursor-pointer">
+                          Quero receber novidades por email
+                        </label>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
+
+                    <Button type="submit" variant="hero" className="w-full hover:scale-105 transition-transform" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Cadastrando...
+                        </>
+                      ) : (
+                        "Criar conta"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            Ao continuar, você concorda com nossos{" "}
+            <a href="#" className="text-secondary hover:underline">termos de serviço</a>
+          </p>
         </div>
       </main>
     </div>

@@ -21,8 +21,11 @@ const Hero = () => {
                 moradia ideal
               </span>
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-white/80 max-w-3xl mx-auto px-4">
-              Conectamos estudantes a proprietários de imóveis, repúblicas 
+            <p className="text-lg sm:text-xl md:text-2xl text-white/80 max-w-3xl mx-auto px-4 font-semibold">
+              FUSHUB: conectando estudantes à moradia certa, no lugar certo.
+            </p>
+            <p className="text-base sm:text-lg text-white/70 max-w-2xl mx-auto px-4">
+              Plataforma completa para encontrar imóveis, repúblicas 
               e vagas próximas à sua universidade
             </p>
           </div>
@@ -50,10 +53,10 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8 px-4">
-            <Button variant="cta" size="xl" className="w-full sm:w-auto" asChild>
+            <Button variant="cta" size="xl" className="w-full sm:w-auto hover:scale-105 transition-transform" asChild>
               <a href="/login">Sou Estudante</a>
             </Button>
-            <Button variant="nav" size="xl" className="bg-white/10 text-white border-white/30 hover:bg-white/20 w-full sm:w-auto" asChild>
+            <Button variant="nav" size="xl" className="bg-white/10 text-white border-white/30 hover:bg-white/20 hover:scale-105 transition-transform w-full sm:w-auto" asChild>
               <a href="/login">Sou Proprietário</a>
             </Button>
           </div>
