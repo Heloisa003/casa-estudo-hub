@@ -14,7 +14,206 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          property_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          university: string | null
+          updated_at: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name: string
+          id: string
+          phone?: string | null
+          university?: string | null
+          updated_at?: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          university?: string | null
+          updated_at?: string
+          user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          available_spots: number
+          bathrooms: number
+          bedrooms: number
+          city: string
+          created_at: string
+          description: string
+          distance_to_university: number | null
+          id: string
+          images: string[]
+          is_available: boolean
+          is_premium: boolean
+          latitude: number | null
+          longitude: number | null
+          max_occupants: number
+          neighborhood: string
+          owner_id: string
+          price: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          state: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          available_spots?: number
+          bathrooms?: number
+          bedrooms?: number
+          city: string
+          created_at?: string
+          description: string
+          distance_to_university?: number | null
+          id?: string
+          images?: string[]
+          is_available?: boolean
+          is_premium?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          max_occupants?: number
+          neighborhood: string
+          owner_id: string
+          price: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          state: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          available_spots?: number
+          bathrooms?: number
+          bedrooms?: number
+          city?: string
+          created_at?: string
+          description?: string
+          distance_to_university?: number | null
+          id?: string
+          images?: string[]
+          is_available?: boolean
+          is_premium?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          max_occupants?: number
+          neighborhood?: string
+          owner_id?: string
+          price?: number
+          property_type?: Database["public"]["Enums"]["property_type"]
+          state?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          property_id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          property_id: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          property_id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +222,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      property_type:
+        | "quarto_individual"
+        | "quarto_compartilhado"
+        | "apartamento"
+        | "casa"
+        | "kitnet"
+      user_type: "student" | "owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +355,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      property_type: [
+        "quarto_individual",
+        "quarto_compartilhado",
+        "apartamento",
+        "casa",
+        "kitnet",
+      ],
+      user_type: ["student", "owner"],
+    },
   },
 } as const
