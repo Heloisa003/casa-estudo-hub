@@ -62,6 +62,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error };
       }
 
+      // Garantir que o perfil seja criado/atualizado com o tipo de usuário escolhido
+      try {
+        const { data: userResp } = await supabase.auth.getUser();
+        const uid = userResp?.user?.id;
+        if (uid) {
+          await supabase.from('profiles').upsert([
+            {
+              id: uid,
+              user_type: userData?.user_type ?? 'student',
+              full_name: userData?.full_name ?? '',
+              phone: userData?.phone ?? null,
+              university: userData?.university ?? null,
+            },
+          ], { onConflict: 'id' });
+        }
+      } catch (e) {
+        console.warn('Profile upsert after signup warning:', e);
+      }
+
       toast({
         title: "Cadastro realizado!",
         description: "Você já pode fazer login.",
