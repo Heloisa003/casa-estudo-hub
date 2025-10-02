@@ -275,7 +275,7 @@ const PropertyDetails = () => {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Contact Card */}
-              <Card className="sticky top-24 z-30 shadow-xl border-border/50 backdrop-blur-sm bg-background/95">
+              <Card className="shadow-xl border-border/50">
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4 mb-6">
                     <Avatar className="w-12 h-12">
