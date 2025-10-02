@@ -54,13 +54,13 @@ const Header = () => {
             ) : (
               <>
                 <Button variant="nav" size="sm" className="hidden sm:inline-flex" asChild>
-                  <Link to="/login">
+                  <Link to="/login?tab=login">
                     <User className="w-4 h-4" />
                     Entrar
                   </Link>
                 </Button>
                 <Button variant="cta" size="sm" asChild>
-                  <Link to="/login">Cadastrar</Link>
+                  <Link to="/login?tab=register">Cadastrar</Link>
                 </Button>
               </>
             )}
