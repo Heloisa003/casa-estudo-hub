@@ -108,6 +108,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error };
       }
 
+      // Garantir que o perfil exista/atualize logo após o login (inclui proprietários)
+      try {
+        const { data: userResp } = await supabase.auth.getUser();
+        const uid = userResp?.user?.id;
+        const meta = (userResp?.user?.user_metadata as any) || {};
+        if (uid) {
+          await supabase.from('profiles').upsert([
+            {
+              id: uid,
+              user_type: (meta.user_type === 'owner' ? 'owner' : 'student'),
+              full_name: meta.full_name ?? '',
+              phone: meta.phone ?? null,
+              university: meta.university ?? null,
+            },
+          ], { onConflict: 'id' });
+        }
+      } catch (e) {
+        console.warn('Profile upsert after login warning:', e);
+      }
+
       toast({
         title: "Login realizado!",
         description: "Bem-vindo de volta!",
