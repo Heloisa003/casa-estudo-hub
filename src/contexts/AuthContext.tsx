@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -64,12 +64,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Garantir que o perfil seja criado/atualizado com o tipo de usuário escolhido
       try {
-        const { data: userResp } = await supabase.auth.getUser();
-        const uid = userResp?.user?.id;
-        if (uid) {
+        const userId = signUpData?.user?.id ?? (await supabase.auth.getUser()).data.user?.id;
+        if (userId) {
           await supabase.from('profiles').upsert([
             {
-              id: uid,
+              id: userId,
               user_type: userData?.user_type ?? 'student',
               full_name: userData?.full_name ?? '',
               phone: userData?.phone ?? null,
