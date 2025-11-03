@@ -28,7 +28,7 @@ const Header = () => {
             <Link to="/search" className="text-foreground hover:text-secondary transition-colors">
               Buscar Vagas
             </Link>
-            <Link to="/dashboard" className="text-foreground hover:text-secondary transition-colors">
+            <Link to="/property-management" className="text-foreground hover:text-secondary transition-colors">
               Cadastrar Imóvel
             </Link>
             <Link to="/how-it-works" className="text-foreground hover:text-secondary transition-colors">
