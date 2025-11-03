@@ -8,7 +8,7 @@ import studentRoom3 from "@/assets/student-room-3.jpg";
 const FeaturedProperties = () => {
   const featuredProperties = [
     {
-      id: "1",
+      id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
       title: "Quarto Moderno - Vila Universitária",
       location: "2,5km da USP - São Paulo",
       price: 1200,
@@ -21,7 +21,7 @@ const FeaturedProperties = () => {
       premium: true,
     },
     {
-      id: "2",
+      id: "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22",
       title: "República Aconchegante",
       location: "1,8km da UNICAMP - Campinas",
       price: 850,
@@ -33,7 +33,7 @@ const FeaturedProperties = () => {
       amenities: ["wifi", "pets", "kitchen"],
     },
     {
-      id: "3",
+      id: "c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33",
       title: "Apartamento Compartilhado",
       location: "3km da UFRJ - Rio de Janeiro",
       price: 1450,

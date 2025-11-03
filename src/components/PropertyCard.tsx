@@ -132,7 +132,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
             <div className="text-sm text-muted-foreground">por mês</div>
           </div>
           <Button variant="cta" asChild>
-            <a href="/property/1">Ver Detalhes</a>
+            <a href={`/property/${property.id}`}>Ver Detalhes</a>
           </Button>
         </div>
       </CardContent>
