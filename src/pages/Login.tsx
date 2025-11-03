@@ -116,13 +116,13 @@ const Login = () => {
       });
       
       if (error) {
-        // Mostrar erro de email já existente no formulário também
-        if (error.message.includes('já existe uma conta') || 
-            error.message.includes('already registered')) {
-          setErrors({ 
-            email: "Este email já está cadastrado. Faça login ou use outro email." 
-          });
-        }
+        const raw = (error?.message || '').toLowerCase();
+        const isDup = raw.includes('já existe') || raw.includes('already registered') || raw.includes('already exists') || raw.includes('user already exists') || raw.includes('duplicate key') || raw.includes('email') && raw.includes('exists');
+        setErrors({
+          email: isDup
+            ? 'Este email já está cadastrado. Faça login ou use outro email.'
+            : (error?.message || 'Erro ao criar conta. Tente novamente.'),
+        });
       } else {
         navigate("/");
       }
