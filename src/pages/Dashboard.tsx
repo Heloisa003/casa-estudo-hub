@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import { ProfileEditForm } from "@/components/ProfileEditForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Home, Heart, MessageCircle, FileText, Star, 
   Plus, Eye, Edit, Trash2, Users, Calendar,
@@ -15,7 +17,22 @@ import studentRoom1 from "@/assets/student-room-1.jpg";
 import studentRoom2 from "@/assets/student-room-2.jpg";
 
 const Dashboard = () => {
-  const [userType] = useState<'student' | 'owner'>('student'); // Simulating user type
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<any | null>(null);
+  const userType: 'student' | 'owner' = profile?.user_type === 'owner' ? 'owner' : 'student';
+
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+      setProfile(data || null);
+    };
+    load();
+  }, [user]);
 
   const favoriteProperties = [
     {
@@ -119,14 +136,22 @@ const Dashboard = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <div className="flex items-center space-x-4 mb-4 md:mb-0">
               <Avatar className="w-16 h-16">
-                <AvatarFallback>JS</AvatarFallback>
+                <AvatarImage src={profile?.avatar_url || undefined} />
+                <AvatarFallback>
+                  {(profile?.full_name || user?.email || 'U')
+                    .split(' ')
+                    .map((n: string) => n[0])
+                    .join('')
+                    .slice(0,2)
+                    .toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  Olá, João Silva!
+                  Olá, {profile?.full_name || user?.email || 'Usuário'}!
                 </h1>
                 <p className="text-muted-foreground">
-                  {userType === 'student' ? 'Estudante de Engenharia - USP' : 'Proprietário'}
+                  {userType === 'student' ? (profile?.university || 'Estudante') : 'Proprietário'}
                 </p>
                 <div className="flex items-center space-x-2 mt-1">
                   <Star className="w-4 h-4 fill-accent text-accent" />
