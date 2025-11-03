@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
+import { ProfileEditForm } from "@/components/ProfileEditForm";
 import { 
   Home, Heart, MessageCircle, FileText, Star, 
   Plus, Eye, Edit, Trash2, Users, Calendar,
@@ -397,52 +398,7 @@ const Dashboard = () => {
                 {/* Profile */}
                 <TabsContent value="profile" className="space-y-6">
                   <h2 className="text-xl font-semibold">Meu Perfil</h2>
-                  
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="space-y-6">
-                        <div className="flex items-center space-x-4">
-                          <Avatar className="w-20 h-20">
-                            <AvatarFallback>JS</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <h3 className="text-xl font-semibold">João Silva</h3>
-                            <p className="text-muted-foreground">
-                              {userType === 'student' ? 'Estudante de Engenharia' : 'Proprietário'}
-                            </p>
-                            <Button variant="outline" size="sm" className="mt-2">
-                              Alterar foto
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-sm font-medium">Email</label>
-                            <p className="text-muted-foreground">joao.silva@email.com</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">Telefone</label>
-                            <p className="text-muted-foreground">(11) 99999-9999</p>
-                          </div>
-                          {userType === 'student' && (
-                            <div>
-                              <label className="text-sm font-medium">Universidade</label>
-                              <p className="text-muted-foreground">Universidade de São Paulo</p>
-                            </div>
-                          )}
-                          <div>
-                            <label className="text-sm font-medium">Membro desde</label>
-                            <p className="text-muted-foreground">Janeiro 2024</p>
-                          </div>
-                        </div>
-                        
-                        <Button variant="cta">
-                          Editar Perfil
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <ProfileEditForm />
                 </TabsContent>
               </Tabs>
             </div>
