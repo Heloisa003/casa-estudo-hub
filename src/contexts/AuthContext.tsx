@@ -54,12 +54,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (error) {
+        let errorMessage = error.message;
+        
+        // Verificar se é erro de email já existente
+        if (error.message.includes('already registered') || 
+            error.message.includes('User already exists') ||
+            error.message.includes('duplicate key')) {
+          errorMessage = "Já existe uma conta cadastrada com este email. Por favor, faça login ou use outro email.";
+        }
+        
         toast({
           title: "Erro no cadastro",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
-        return { error };
+        return { error: { ...error, message: errorMessage } };
       }
 
       // Garantir que o perfil seja criado/atualizado com o tipo de usuário escolhido
