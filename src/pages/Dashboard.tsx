@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import { ProfileEditForm } from "@/components/ProfileEditForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useFavorites } from "@/hooks/useFavorites";
 import { 
   Home, Heart, MessageCircle, FileText, Star, 
   Plus, Eye, Edit, Trash2, Users, Calendar,
@@ -18,7 +19,9 @@ import studentRoom2 from "@/assets/student-room-2.jpg";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { favorites, toggleFavorite } = useFavorites();
   const [profile, setProfile] = useState<any | null>(null);
+  const [favoriteProperties, setFavoriteProperties] = useState<any[]>([]);
   const userType: 'student' | 'owner' = profile?.user_type === 'owner' ? 'owner' : 'student';
 
   useEffect(() => {
@@ -34,24 +37,27 @@ const Dashboard = () => {
     load();
   }, [user]);
 
-  const favoriteProperties = [
-    {
-      id: "1",
-      title: "Quarto Moderno - Vila Universitária",
-      location: "2,5km da USP - São Paulo",
-      price: 1200,
-      image: studentRoom1,
-      status: "Disponível"
-    },
-    {
-      id: "2",
-      title: "República Aconchegante",
-      location: "1,8km da UNICAMP - Campinas",
-      price: 850,
-      image: studentRoom2,
-      status: "Ocupado"
-    },
-  ];
+  // Carregar propriedades favoritadas
+  useEffect(() => {
+    if (!user || favorites.length === 0) {
+      setFavoriteProperties([]);
+      return;
+    }
+
+    const loadFavoriteProperties = async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .in('id', favorites);
+
+      if (!error && data) {
+        setFavoriteProperties(data);
+      }
+    };
+
+    loadFavoriteProperties();
+  }, [user, favorites]);
+
 
   const myProperties = [
     {
@@ -285,86 +291,115 @@ const Dashboard = () => {
                     )}
                   </div>
 
-                  <div className="space-y-4">
-                    {(userType === 'student' ? favoriteProperties : myProperties).map((property) => (
-                      <Card key={property.id} className="hover:shadow-medium transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex space-x-4">
-                            <img
-                              src={property.image}
-                              alt={property.title}
-                              className="w-24 h-24 object-cover rounded-lg"
-                            />
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between mb-2">
-                                <div>
-                                  <h3 className="font-semibold text-lg">{property.title}</h3>
-                                  <div className="flex items-center text-muted-foreground text-sm">
-                                    <MapPin className="w-4 h-4 mr-1" />
-                                    {property.location}
+                  {userType === 'student' && favoriteProperties.length === 0 ? (
+                    <Card className="text-center p-12">
+                      <div className="flex flex-col items-center space-y-4">
+                        <Heart className="w-16 h-16 text-muted-foreground" />
+                        <div>
+                          <h3 className="text-lg font-semibold mb-2">Nenhum favorito ainda</h3>
+                          <p className="text-muted-foreground mb-4">
+                            Comece a favoritar propriedades que você gosta!
+                          </p>
+                          <Button variant="cta" asChild>
+                            <a href="/search">Explorar Imóveis</a>
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {(userType === 'student' ? favoriteProperties : myProperties).map((property) => (
+                        <Card key={property.id} className="hover:shadow-medium transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex space-x-4">
+                              <img
+                                src={property.images?.[0] || property.image || studentRoom1}
+                                alt={property.title}
+                                className="w-24 h-24 object-cover rounded-lg"
+                              />
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <h3 className="font-semibold text-lg">{property.title}</h3>
+                                    <div className="flex items-center text-muted-foreground text-sm">
+                                      <MapPin className="w-4 h-4 mr-1" />
+                                      {property.address || property.location}
+                                    </div>
                                   </div>
-                                </div>
-                                <Badge 
-                                  variant={property.status === 'Ativo' || property.status === 'Disponível' ? 'default' : 'secondary'}
-                                >
-                                  {property.status}
-                                </Badge>
-                              </div>
-                              
-                              <div className="flex items-center justify-between">
-                                <div className="text-xl font-bold text-secondary">
-                                  R$ {property.price.toLocaleString()}
-                                  <span className="text-sm text-muted-foreground font-normal">/mês</span>
+                                  <Badge 
+                                    variant={(property.is_available || property.status === 'Ativo' || property.status === 'Disponível') ? 'default' : 'secondary'}
+                                  >
+                                    {property.is_available !== undefined ? (property.is_available ? 'Disponível' : 'Ocupado') : property.status}
+                                  </Badge>
                                 </div>
                                 
-                                {userType === 'owner' && (
-                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                                    <div className="flex items-center">
-                                      <Eye className="w-4 h-4 mr-1" />
-                                      {(property as any).views} views
-                                    </div>
-                                    <div className="flex items-center">
-                                      <MessageCircle className="w-4 h-4 mr-1" />
-                                      {(property as any).inquiries} consultas
-                                    </div>
-                                    <div className="flex items-center">
-                                      <Star className="w-4 h-4 mr-1 fill-accent text-accent" />
-                                      {(property as any).rating}
-                                    </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xl font-bold text-secondary">
+                                    R$ {Number(property.price).toLocaleString()}
+                                    <span className="text-sm text-muted-foreground font-normal">/mês</span>
                                   </div>
-                                )}
-                              </div>
-                              
-                              <div className="flex space-x-2 mt-4">
-                                <Button variant="outline" size="sm">
-                                  <Eye className="w-4 h-4" />
-                                  Ver
-                                </Button>
-                                {userType === 'owner' && (
-                                  <>
-                                    <Button variant="outline" size="sm">
-                                      <Edit className="w-4 h-4" />
-                                      Editar
-                                    </Button>
-                                    <Button variant="outline" size="sm">
-                                      <Trash2 className="w-4 h-4" />
-                                      Excluir
-                                    </Button>
-                                  </>
-                                )}
-                                {userType === 'student' && (
-                                  <Button variant="cta" size="sm">
-                                    <MessageCircle className="w-4 h-4" />
-                                    Contatar
+                                  
+                                  {userType === 'owner' && (
+                                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                                      <div className="flex items-center">
+                                        <Eye className="w-4 h-4 mr-1" />
+                                        {(property as any).views || 0} views
+                                      </div>
+                                      <div className="flex items-center">
+                                        <MessageCircle className="w-4 h-4 mr-1" />
+                                        {(property as any).inquiries || 0} consultas
+                                      </div>
+                                      <div className="flex items-center">
+                                        <Star className="w-4 h-4 mr-1 fill-accent text-accent" />
+                                        {(property as any).rating || 4.8}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="flex space-x-2 mt-4">
+                                  <Button variant="outline" size="sm" asChild>
+                                    <a href={`/property/${property.id}`}>
+                                      <Eye className="w-4 h-4" />
+                                      Ver
+                                    </a>
                                   </Button>
-                                )}
+                                  {userType === 'owner' && (
+                                    <>
+                                      <Button variant="outline" size="sm">
+                                        <Edit className="w-4 h-4" />
+                                        Editar
+                                      </Button>
+                                      <Button variant="outline" size="sm">
+                                        <Trash2 className="w-4 h-4" />
+                                        Excluir
+                                      </Button>
+                                    </>
+                                  )}
+                                  {userType === 'student' && (
+                                    <>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => toggleFavorite(property.id)}
+                                      >
+                                        <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+                                        Remover
+                                      </Button>
+                                      <Button variant="cta" size="sm">
+                                        <MessageCircle className="w-4 h-4" />
+                                        Contatar
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </TabsContent>
 
                 {/* Messages */}

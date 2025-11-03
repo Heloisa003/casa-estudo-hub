@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Users, Star, Heart, Wifi, Car, PawPrint, Coffee } from "lucide-react";
+import { useFavorites } from "@/hooks/useFavorites";
+import { cn } from "@/lib/utils";
 
 interface Property {
   id: string;
@@ -22,6 +25,21 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ property }: PropertyCardProps) => {
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const [isAnimating, setIsAnimating] = useState(false);
+  const favorited = isFavorite(property.id);
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const success = await toggleFavorite(property.id);
+    if (success) {
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 600);
+    }
+  };
+
   const amenityIcons = {
     wifi: Wifi,
     parking: Car,
@@ -45,8 +63,21 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
           alt={property.title}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <button className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-colors">
-          <Heart className="w-4 h-4 text-muted-foreground hover:text-red-500" />
+        <button 
+          onClick={handleFavoriteClick}
+          className={cn(
+            "absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-all duration-300",
+            isAnimating && "animate-scale-in"
+          )}
+        >
+          <Heart 
+            className={cn(
+              "w-5 h-5 transition-all duration-300",
+              favorited 
+                ? "fill-red-500 text-red-500 scale-110" 
+                : "text-muted-foreground hover:text-red-500 hover:scale-110"
+            )} 
+          />
         </button>
       </div>
 
