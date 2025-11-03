@@ -36,6 +36,10 @@ const Login = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const activeTab = searchParams.get("tab") || "login";
 
+  const handleTabChange = (value: string) => {
+    navigate(`/login?tab=${value}`);
+  };
+
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
@@ -135,7 +139,7 @@ const Login = () => {
 
           <Card className="shadow-medium">
             <CardContent className="p-6">
-              <Tabs value={activeTab} className="w-full">
+              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="login">Entrar</TabsTrigger>
                   <TabsTrigger value="register">Cadastrar</TabsTrigger>
