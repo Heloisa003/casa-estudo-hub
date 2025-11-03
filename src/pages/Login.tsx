@@ -28,16 +28,20 @@ const signupSchema = z.object({
 
 const Login = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, signIn, signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<"student" | "owner">("student");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const activeTab = searchParams.get("tab") || "login";
+  const [tab, setTab] = useState<"login" | "register">(
+    searchParams.get("tab") === "register" ? "register" : "login"
+  );
 
   const handleTabChange = (value: string) => {
-    navigate(`/login?tab=${value}`);
+    const v = value === "register" ? "register" : "login";
+    setTab(v as "login" | "register");
+    setSearchParams({ tab: v });
   };
 
   // Redirect if already logged in
@@ -46,6 +50,12 @@ const Login = () => {
       navigate("/");
     }
   }, [user, navigate]);
+
+  // Sync tab state with URL changes
+  useEffect(() => {
+    const next = searchParams.get("tab") === "register" ? "register" : "login";
+    setTab(next);
+  }, [searchParams]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -139,7 +149,7 @@ const Login = () => {
 
           <Card className="shadow-medium">
             <CardContent className="p-6">
-              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+              <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="login">Entrar</TabsTrigger>
                   <TabsTrigger value="register">Cadastrar</TabsTrigger>
