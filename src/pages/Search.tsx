@@ -16,7 +16,7 @@ const SearchPage = () => {
 
   const properties = [
     {
-      id: "1",
+      id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
       title: "Quarto Moderno - Vila Universitária",
       location: "2,5km da USP - São Paulo",
       price: 1200,
@@ -29,7 +29,7 @@ const SearchPage = () => {
       premium: true,
     },
     {
-      id: "2",
+      id: "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22",
       title: "República Aconchegante",
       location: "1,8km da UNICAMP - Campinas",
       price: 850,
@@ -41,7 +41,7 @@ const SearchPage = () => {
       amenities: ["wifi", "pets", "kitchen"],
     },
     {
-      id: "3",
+      id: "c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33",
       title: "Apartamento Compartilhado",
       location: "3km da UFRJ - Rio de Janeiro",
       price: 1450,
@@ -54,7 +54,7 @@ const SearchPage = () => {
       premium: true,
     },
     {
-      id: "4",
+      id: "d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44",
       title: "Casa Estudantil Completa",
       location: "1,2km da UFMG - Belo Horizonte",
       price: 980,
@@ -66,7 +66,7 @@ const SearchPage = () => {
       amenities: ["wifi", "pets", "kitchen"],
     },
     {
-      id: "5",
+      id: "e4eebc99-9c0b-4ef8-bb6d-6bb9bd380a55",
       title: "Studio Individual Premium",
       location: "800m da PUC - Porto Alegre",
       price: 1680,
@@ -79,7 +79,7 @@ const SearchPage = () => {
       premium: true,
     },
     {
-      id: "6",
+      id: "f5eebc99-9c0b-4ef8-bb6d-6bb9bd380a66",
       title: "Quarto em República Feminina",
       location: "1,5km da UFSC - Florianópolis",
       price: 750,
