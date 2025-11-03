@@ -1,51 +1,10 @@
 import PropertyCard from "./PropertyCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import studentRoom1 from "@/assets/student-room-1.jpg";
-import studentRoom2 from "@/assets/student-room-2.jpg";
-import studentRoom3 from "@/assets/student-room-3.jpg";
+import { mockProperties } from "@/data/mockProperties";
 
 const FeaturedProperties = () => {
-  const featuredProperties = [
-    {
-      id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-      title: "Quarto Moderno - Vila Universitária",
-      location: "2,5km da USP - São Paulo",
-      price: 1200,
-      rating: 4.8,
-      reviews: 24,
-      image: studentRoom1,
-      type: "Quarto Individual",
-      roommates: 3,
-      amenities: ["wifi", "parking", "kitchen"],
-      premium: true,
-    },
-    {
-      id: "b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22",
-      title: "República Aconchegante",
-      location: "1,8km da UNICAMP - Campinas",
-      price: 850,
-      rating: 4.6,
-      reviews: 18,
-      image: studentRoom2,
-      type: "República",
-      roommates: 5,
-      amenities: ["wifi", "pets", "kitchen"],
-    },
-    {
-      id: "c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a33",
-      title: "Apartamento Compartilhado",
-      location: "3km da UFRJ - Rio de Janeiro",
-      price: 1450,
-      rating: 4.9,
-      reviews: 31,
-      image: studentRoom3,
-      type: "Quarto Compartilhado",
-      roommates: 2,
-      amenities: ["wifi", "parking", "kitchen", "pets"],
-      premium: true,
-    },
-  ];
+  const featuredProperties = mockProperties.slice(0, 3);
 
   return (
     <section className="py-20 bg-background">

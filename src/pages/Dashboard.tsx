@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import studentRoom1 from "@/assets/student-room-1.jpg";
 import studentRoom2 from "@/assets/student-room-2.jpg";
+import { mockProperties } from "@/data/mockProperties";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -37,25 +38,15 @@ const Dashboard = () => {
     load();
   }, [user]);
 
-  // Carregar propriedades favoritadas
+// Carregar propriedades favoritadas (usando mock local por enquanto)
   useEffect(() => {
     if (!user || favorites.length === 0) {
       setFavoriteProperties([]);
       return;
     }
 
-    const loadFavoriteProperties = async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .in('id', favorites);
-
-      if (!error && data) {
-        setFavoriteProperties(data);
-      }
-    };
-
-    loadFavoriteProperties();
+    const selected = mockProperties.filter(p => favorites.includes(p.id));
+    setFavoriteProperties(selected);
   }, [user, favorites]);
 
 
