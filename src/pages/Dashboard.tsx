@@ -151,7 +151,7 @@ const Dashboard = () => {
                   Olá, {profile?.full_name || user?.email || 'Usuário'}!
                 </h1>
                 <p className="text-muted-foreground">
-                  {userType === 'student' ? (profile?.university || 'Estudante') : 'Proprietário'}
+                  {userType === 'student' ? (profile?.university || 'Estudante') : 'Painel do Proprietário'}
                 </p>
                 <div className="flex items-center space-x-2 mt-1">
                   <Star className="w-4 h-4 fill-accent text-accent" />
@@ -168,59 +168,94 @@ const Dashboard = () => {
               </Button>
               <Button variant="cta">
                 <Plus className="w-4 h-4" />
-                {userType === 'student' ? 'Criar Alerta' : 'Novo Anúncio'}
+                {userType === 'student' ? 'Criar Alerta' : 'Cadastrar Imóvel'}
               </Button>
             </div>
           </div>
 
-          {/* Stats Cards for Owner */}
+          {/* Owner Stats Dashboard */}
           {userType === 'owner' && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Propriedades</p>
-                      <p className="text-2xl font-bold">8</p>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <Card className="bg-gradient-to-br from-secondary/20 to-secondary/5 border-secondary/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total de Imóveis</p>
+                        <p className="text-3xl font-bold text-secondary">8</p>
+                        <p className="text-xs text-muted-foreground mt-1">6 ativos, 2 inativos</p>
+                      </div>
+                      <Home className="w-10 h-10 text-secondary" />
                     </div>
-                    <Home className="w-8 h-8 text-secondary" />
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-accent/20 to-accent/5 border-accent/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Visualizações</p>
+                        <p className="text-3xl font-bold text-accent">1,234</p>
+                        <p className="text-xs text-green-600 mt-1">↑ 12% este mês</p>
+                      </div>
+                      <TrendingUp className="w-10 h-10 text-accent" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-green-500/20 to-green-500/5 border-green-500/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Receita Mensal</p>
+                        <p className="text-3xl font-bold text-green-600">R$ 9,6k</p>
+                        <p className="text-xs text-muted-foreground mt-1">6 contratos ativos</p>
+                      </div>
+                      <DollarSign className="w-10 h-10 text-green-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border-blue-500/20">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Taxa de Ocupação</p>
+                        <p className="text-3xl font-bold text-blue-600">87%</p>
+                        <p className="text-xs text-muted-foreground mt-1">7 de 8 ocupados</p>
+                      </div>
+                      <Users className="w-10 h-10 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Owner Quick Actions */}
+              <Card className="mb-8 border-secondary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-secondary" />
+                    Ações Rápidas - Proprietário
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Button variant="outline" className="h-auto py-4 flex flex-col items-start">
+                      <Plus className="w-5 h-5 mb-2 text-secondary" />
+                      <span className="font-semibold">Adicionar Propriedade</span>
+                      <span className="text-xs text-muted-foreground mt-1">Cadastre um novo imóvel</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto py-4 flex flex-col items-start">
+                      <FileText className="w-5 h-5 mb-2 text-accent" />
+                      <span className="font-semibold">Criar Contrato</span>
+                      <span className="text-xs text-muted-foreground mt-1">Formalize um novo aluguel</span>
+                    </Button>
+                    <Button variant="outline" className="h-auto py-4 flex flex-col items-start">
+                      <TrendingUp className="w-5 h-5 mb-2 text-green-600" />
+                      <span className="font-semibold">Ver Relatórios</span>
+                      <span className="text-xs text-muted-foreground mt-1">Análise de desempenho</span>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Visualizações</p>
-                      <p className="text-2xl font-bold">1,234</p>
-                    </div>
-                    <TrendingUp className="w-8 h-8 text-accent" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Receita Mensal</p>
-                      <p className="text-2xl font-bold">R$ 9,6k</p>
-                    </div>
-                    <DollarSign className="w-8 h-8 text-green-500" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Taxa Ocupação</p>
-                      <p className="text-2xl font-bold">87%</p>
-                    </div>
-                    <Users className="w-8 h-8 text-secondary" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            </>
           )}
 
           {/* Main Content */}
