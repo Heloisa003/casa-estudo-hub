@@ -115,7 +115,15 @@ const Login = () => {
         user_type: data.user_type,
       });
       
-      if (!error) {
+      if (error) {
+        // Mostrar erro de email já existente no formulário também
+        if (error.message.includes('já existe uma conta') || 
+            error.message.includes('already registered')) {
+          setErrors({ 
+            email: "Este email já está cadastrado. Faça login ou use outro email." 
+          });
+        }
+      } else {
         navigate("/");
       }
     } catch (error) {
