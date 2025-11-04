@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,7 +13,6 @@ import { ProfileEditForm } from "@/components/ProfileEditForm";
 import { ConversationsList } from "@/components/ConversationsList";
 import { ChatMessages } from "@/components/ChatMessages";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -40,6 +40,7 @@ import {
 const PropertyManagement = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [properties, setProperties] = useState<any[]>([]);
@@ -52,9 +53,22 @@ const PropertyManagement = () => {
       navigate("/login");
       return;
     }
+    
+    // Check for query params
+    const tabParam = searchParams.get("tab");
+    const conversationParam = searchParams.get("conversation");
+    
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+    
+    if (conversationParam) {
+      setSelectedConversationId(conversationParam);
+    }
+    
     loadProfile();
     loadProperties();
-  }, [user, navigate]);
+  }, [user, navigate, searchParams]);
 
   const loadProfile = async () => {
     if (!user) return;

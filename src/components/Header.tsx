@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Menu, User, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { MessageNotifications } from "@/components/MessageNotifications";
 import fushubLogo from "@/assets/fushub-logo.png";
 
 const Header = () => {
@@ -40,6 +41,7 @@ const Header = () => {
           <div className="flex items-center space-x-3">
             {user ? (
               <>
+                <MessageNotifications />
                 <Button variant="nav" size="sm" className="hidden sm:inline-flex" asChild>
                   <Link to="/dashboard">
                     <User className="w-4 h-4" />
