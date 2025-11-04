@@ -38,15 +38,44 @@ const Dashboard = () => {
     load();
   }, [user]);
 
-// Carregar propriedades favoritadas (usando mock local por enquanto)
+  // Carregar propriedades favoritadas do banco de dados
   useEffect(() => {
-    if (!user || favorites.length === 0) {
-      setFavoriteProperties([]);
-      return;
-    }
+    const loadFavoriteProperties = async () => {
+      if (!user || favorites.length === 0) {
+        setFavoriteProperties([]);
+        return;
+      }
 
-    const selected = mockProperties.filter(p => favorites.includes(p.id));
-    setFavoriteProperties(selected);
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .in('id', favorites);
+
+      if (!error && data) {
+        // Transformar dados para o formato esperado
+        const transformedData = data.map(prop => ({
+          id: prop.id,
+          title: prop.title,
+          location: `${prop.neighborhood}, ${prop.city}`,
+          address: `${prop.address}, ${prop.neighborhood} - ${prop.city}/${prop.state}`,
+          price: Number(prop.price),
+          rating: 4.8,
+          reviews: 0,
+          image: prop.images?.[0] || "/placeholder.svg",
+          images: prop.images,
+          type: prop.property_type,
+          roommates: prop.max_occupants - 1,
+          amenities: prop.amenities || [],
+          premium: prop.is_premium,
+          is_available: prop.is_available,
+          status: prop.is_available ? 'Disponível' : 'Ocupado',
+          ...prop
+        }));
+        setFavoriteProperties(transformedData);
+      }
+    };
+
+    loadFavoriteProperties();
   }, [user, favorites]);
 
 
