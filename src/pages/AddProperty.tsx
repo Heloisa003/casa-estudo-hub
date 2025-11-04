@@ -188,7 +188,7 @@ const AddProperty = () => {
           amenities: selectedAmenities,
           images: imageUrls,
           is_available: true,
-        });
+        } as any);
 
       if (insertError) throw insertError;
 
