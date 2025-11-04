@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Camera, X } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const profileSchema = z.object({
@@ -26,11 +26,9 @@ export const ProfileEditForm = () => {
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [userType, setUserType] = useState<string>('student');
-  const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string>('');
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -61,9 +59,9 @@ export const ProfileEditForm = () => {
           phone: data.phone || '',
           university: data.university || '',
         });
-        setAvatarUrl(data.avatar_url || '');
-        setAvatarPreview(data.avatar_url || '');
         setUserType(data.user_type || 'student');
+        setCurrentAvatarUrl(data.avatar_url || '');
+        setAvatarPreview(data.avatar_url || '');
       }
     } catch (error: any) {
       toast({
@@ -90,7 +88,7 @@ export const ProfileEditForm = () => {
       return;
     }
 
-    // Validar tamanho (max 2MB)
+    // Validar tamanho (máx 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast({
         title: "Arquivo muito grande",
@@ -110,76 +108,9 @@ export const ProfileEditForm = () => {
     reader.readAsDataURL(file);
   };
 
-  const removeAvatar = async () => {
-    if (!user) return;
-    
-    setUploadingAvatar(true);
-    try {
-      // Deletar avatar antigo do storage se existir
-      if (avatarUrl) {
-        const oldPath = avatarUrl.split('/').pop();
-        if (oldPath) {
-          await supabase.storage
-            .from('avatars')
-            .remove([`${user.id}/${oldPath}`]);
-        }
-      }
-
-      // Atualizar perfil
-      const { error } = await supabase
-        .from('profiles')
-        .update({ avatar_url: null })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      setAvatarUrl('');
-      setAvatarPreview('');
-      setAvatarFile(null);
-
-      toast({
-        title: "Avatar removido",
-        description: "Seu avatar foi removido com sucesso",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erro ao remover avatar",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  const uploadAvatar = async (): Promise<string | null> => {
-    if (!avatarFile || !user) return avatarUrl;
-
-    const fileExt = avatarFile.name.split('.').pop();
-    const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-    const filePath = `${user.id}/${fileName}`;
-
-    // Deletar avatar antigo se existir
-    if (avatarUrl) {
-      const oldPath = avatarUrl.split('/').pop();
-      if (oldPath) {
-        await supabase.storage
-          .from('avatars')
-          .remove([`${user.id}/${oldPath}`]);
-      }
-    }
-
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(filePath, avatarFile);
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
+  const removeAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview(currentAvatarUrl);
   };
 
   const onSubmit = async (data: ProfileFormData) => {
@@ -187,33 +118,59 @@ export const ProfileEditForm = () => {
 
     setLoading(true);
     try {
-      // Upload avatar se houver novo arquivo
-      let newAvatarUrl = avatarUrl;
+      let avatarUrl = currentAvatarUrl;
+
+      // Se houver um novo arquivo de avatar, fazer upload
       if (avatarFile) {
-        setUploadingAvatar(true);
-        newAvatarUrl = await uploadAvatar();
-        setUploadingAvatar(false);
+        // Deletar avatar antigo se existir
+        if (currentAvatarUrl) {
+          const oldPath = currentAvatarUrl.split('/').slice(-2).join('/');
+          await supabase.storage
+            .from('avatars')
+            .remove([oldPath]);
+        }
+
+        // Upload do novo avatar
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, avatarFile);
+
+        if (uploadError) throw uploadError;
+
+        // Obter URL pública
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+        avatarUrl = publicUrl;
       }
 
+      // Atualizar perfil no banco
       const { error } = await supabase
         .from('profiles')
         .update({
           full_name: data.full_name,
           phone: data.phone || null,
           university: data.university || null,
-          avatar_url: newAvatarUrl,
+          avatar_url: avatarUrl || null,
         })
         .eq('id', user.id);
 
       if (error) throw error;
 
-      setAvatarUrl(newAvatarUrl || '');
+      setCurrentAvatarUrl(avatarUrl);
       setAvatarFile(null);
 
       toast({
         title: "Perfil atualizado!",
         description: "Suas informações foram salvas com sucesso.",
       });
+
+      // Recarregar perfil para atualizar o avatar em todos os lugares
+      await loadProfile();
     } catch (error: any) {
       toast({
         title: "Erro ao atualizar perfil",
@@ -222,7 +179,6 @@ export const ProfileEditForm = () => {
       });
     } finally {
       setLoading(false);
-      setUploadingAvatar(false);
     }
   };
 
@@ -239,9 +195,9 @@ export const ProfileEditForm = () => {
       <CardContent className="p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="flex flex-col items-center space-y-4">
-            <div className="relative group">
+            <div className="relative">
               <Avatar className="w-24 h-24">
-                <AvatarImage src={avatarPreview || avatarUrl} />
+                <AvatarImage src={avatarPreview || currentAvatarUrl} />
                 <AvatarFallback>
                   {(user?.user_metadata?.full_name || user?.email || 'U')
                     .split(' ')
@@ -251,51 +207,44 @@ export const ProfileEditForm = () => {
                     .toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
+              {avatarFile && (
+                <button
                   type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingAvatar}
-                >
-                  {uploadingAvatar ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Camera className="w-5 h-5" />
-                  )}
-                </Button>
-              </div>
-              {(avatarPreview || avatarUrl) && (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="destructive"
-                  className="absolute -top-2 -right-2 w-6 h-6 rounded-full"
                   onClick={removeAvatar}
-                  disabled={uploadingAvatar}
+                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 transition-colors"
                 >
-                  <X className="w-3 h-3" />
-                </Button>
+                  <X className="w-4 h-4" />
+                </button>
               )}
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarChange}
-              className="hidden"
-            />
+            
+            <div className="flex flex-col items-center space-y-2">
+              <Label htmlFor="avatar-upload" className="cursor-pointer">
+                <div className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors">
+                  <Upload className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {avatarFile ? 'Trocar Foto' : 'Adicionar Foto'}
+                  </span>
+                </div>
+              </Label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+              <p className="text-xs text-muted-foreground text-center">
+                PNG, JPG ou WEBP (máx. 2MB)
+              </p>
+            </div>
+
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 {userType === 'student' ? 'Estudante' : 'Proprietário'}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {user?.email}
-              </p>
-              <p className="text-xs text-muted-foreground mt-2">
-                Clique na foto para alterar
               </p>
             </div>
           </div>
