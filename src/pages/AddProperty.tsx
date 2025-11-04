@@ -14,7 +14,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, X, Home, TrendingUp, DollarSign, Users, Eye, Plus, MapPin, Bed, Bath } from "lucide-react";
+import { ArrowLeft, Upload, X, Home, TrendingUp, DollarSign, Users, Eye, Plus, MapPin, Bed, Bath, Power, Edit, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const propertySchema = z.object({
   title: z.string().min(5, "Título deve ter no mínimo 5 caracteres").max(100, "Título muito longo"),
@@ -54,6 +65,7 @@ const AddProperty = () => {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [properties, setProperties] = useState<any[]>([]);
+  const [deletePropertyId, setDeletePropertyId] = useState<string | null>(null);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -143,6 +155,58 @@ const AddProperty = () => {
       setProperties(data || []);
     } catch (error: any) {
       console.error("Erro ao carregar imóveis:", error);
+    }
+  };
+
+  const togglePropertyStatus = async (propertyId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .update({ is_available: !currentStatus })
+        .eq('id', propertyId);
+
+      if (error) throw error;
+
+      toast({
+        title: !currentStatus ? "Imóvel ativado" : "Imóvel desativado",
+        description: !currentStatus 
+          ? "O imóvel está agora visível para locadores" 
+          : "O imóvel foi ocultado do público"
+      });
+
+      loadProperties();
+      loadStats();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar status",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteProperty = async (propertyId: string) => {
+    try {
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', propertyId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Imóvel excluído",
+        description: "O imóvel foi removido com sucesso"
+      });
+
+      loadProperties();
+      loadStats();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir imóvel",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
 
@@ -438,21 +502,27 @@ const AddProperty = () => {
                         />
                         {!property.is_available && (
                           <div className="absolute top-2 right-2 bg-destructive text-destructive-foreground px-2 py-1 rounded text-xs font-semibold">
-                            Ocupado
+                            Desativado
                           </div>
                         )}
                         {property.is_available && (
                           <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold">
-                            Disponível
+                            Ativo
                           </div>
                         )}
                       </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-bold text-lg mb-2 line-clamp-1">{property.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-3 flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          {property.neighborhood}, {property.city} - {property.state}
-                        </p>
+                      <CardContent className="p-4 space-y-4">
+                        <div>
+                          <h3 className="font-bold text-lg mb-2 line-clamp-1">{property.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-3 flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            {property.address}, {property.neighborhood}
+                          </p>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            {property.city} - {property.state}
+                          </p>
+                        </div>
+
                         <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Bed className="w-4 h-4" />
@@ -466,20 +536,60 @@ const AddProperty = () => {
                             {getPropertyTypeLabel(property.property_type)}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
+
+                        <div className="flex items-center justify-between pt-3 border-t">
                           <div>
                             <p className="text-2xl font-bold text-primary">
                               R$ {Number(property.price).toLocaleString('pt-BR')}
                             </p>
                             <p className="text-xs text-muted-foreground">por mês</p>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/property/${property.id}`)}
-                          >
-                            Ver Detalhes
-                          </Button>
+                        </div>
+
+                        {/* Controles do Proprietário */}
+                        <div className="space-y-3 pt-3 border-t">
+                          {/* Toggle Ativar/Desativar */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Power className={`w-4 h-4 ${property.is_available ? 'text-green-600' : 'text-muted-foreground'}`} />
+                              <span className="text-sm font-medium">
+                                {property.is_available ? 'Visível para locadores' : 'Oculto do público'}
+                              </span>
+                            </div>
+                            <Switch
+                              checked={property.is_available}
+                              onCheckedChange={() => togglePropertyStatus(property.id, property.is_available)}
+                            />
+                          </div>
+
+                          {/* Botões de Ação */}
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => navigate(`/property/${property.id}`)}
+                            >
+                              Ver Detalhes
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => toast({
+                                title: "Em desenvolvimento",
+                                description: "Função de edição em breve"
+                              })}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setDeletePropertyId(property.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -791,6 +901,32 @@ const AddProperty = () => {
           </form>
           )}
         </div>
+
+        {/* Dialog de Confirmação de Exclusão */}
+        <AlertDialog open={!!deletePropertyId} onOpenChange={() => setDeletePropertyId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. O imóvel será permanentemente excluído da plataforma.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (deletePropertyId) {
+                    handleDeleteProperty(deletePropertyId);
+                    setDeletePropertyId(null);
+                  }
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
