@@ -66,6 +66,7 @@ const AddProperty = () => {
   const [showForm, setShowForm] = useState(false);
   const [properties, setProperties] = useState<any[]>([]);
   const [deletePropertyId, setDeletePropertyId] = useState<string | null>(null);
+  const [editingProperty, setEditingProperty] = useState<any | null>(null);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -83,7 +84,8 @@ const AddProperty = () => {
     handleSubmit,
     formState: { errors },
     setValue,
-    watch
+    watch,
+    reset
   } = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
   });
@@ -210,6 +212,28 @@ const AddProperty = () => {
     }
   };
 
+  const handleEditProperty = (property: any) => {
+    setEditingProperty(property);
+    setShowForm(true);
+    
+    // Preencher formulário com dados do imóvel
+    setValue('title', property.title);
+    setValue('property_type', property.property_type);
+    setValue('price', property.price.toString());
+    setValue('bedrooms', property.bedrooms.toString());
+    setValue('bathrooms', property.bathrooms.toString());
+    setValue('max_occupants', property.max_occupants.toString());
+    setValue('available_spots', property.available_spots.toString());
+    setValue('address', property.address);
+    setValue('neighborhood', property.neighborhood);
+    setValue('city', property.city);
+    setValue('state', property.state);
+    setValue('description', property.description);
+    
+    setSelectedAmenities(property.amenities || []);
+    setImagePreviews(property.images || []);
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
@@ -276,7 +300,7 @@ const AddProperty = () => {
       return;
     }
 
-    if (images.length === 0) {
+    if (!editingProperty && images.length === 0) {
       toast({
         title: "Imagens obrigatórias",
         description: "Adicione pelo menos uma imagem do imóvel",
@@ -288,72 +312,93 @@ const AddProperty = () => {
     setIsSubmitting(true);
 
     try {
-      // Upload das imagens
-      const imageUrls: string[] = [];
+      let imageUrls: string[] = editingProperty?.images || [];
       
-      for (const image of images) {
-        const fileExt = image.name.split('.').pop();
-        const fileName = `${user.id}-${Date.now()}-${Math.random()}.${fileExt}`;
-        const filePath = `properties/${fileName}`;
+      // Upload de novas imagens (se houver)
+      if (images.length > 0) {
+        for (const image of images) {
+          const fileExt = image.name.split('.').pop();
+          const fileName = `${user.id}-${Date.now()}-${Math.random()}.${fileExt}`;
+          const filePath = `properties/${fileName}`;
 
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from('property-images')
-          .upload(filePath, image);
+          const { error: uploadError } = await supabase.storage
+            .from('property-images')
+            .upload(filePath, image);
 
-        if (uploadError) throw uploadError;
+          if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('property-images')
-          .getPublicUrl(filePath);
+          const { data: { publicUrl } } = supabase.storage
+            .from('property-images')
+            .getPublicUrl(filePath);
 
-        imageUrls.push(publicUrl);
+          imageUrls.push(publicUrl);
+        }
       }
 
-      // Inserir o imóvel no banco
-      const { error: insertError } = await supabase
-        .from('properties')
-        .insert({
-          owner_id: user.id,
-          title: data.title,
-          property_type: data.property_type,
-          price: parseFloat(data.price),
-          bedrooms: parseInt(data.bedrooms),
-          bathrooms: parseInt(data.bathrooms),
-          max_occupants: parseInt(data.max_occupants),
-          available_spots: parseInt(data.available_spots),
-          address: data.address,
-          neighborhood: data.neighborhood,
-          city: data.city,
-          state: data.state,
-          description: data.description,
-          amenities: selectedAmenities,
-          images: imageUrls,
-          is_available: true,
-        } as any);
+      const propertyData = {
+        title: data.title,
+        property_type: data.property_type,
+        price: parseFloat(data.price),
+        bedrooms: parseInt(data.bedrooms),
+        bathrooms: parseInt(data.bathrooms),
+        max_occupants: parseInt(data.max_occupants),
+        available_spots: parseInt(data.available_spots),
+        address: data.address,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state,
+        description: data.description,
+        amenities: selectedAmenities,
+        images: imageUrls,
+      };
 
-      if (insertError) throw insertError;
+      if (editingProperty) {
+        // Atualizar imóvel existente
+        const { error } = await supabase
+          .from('properties')
+          .update(propertyData as any)
+          .eq('id', editingProperty.id);
 
-      toast({
-        title: "Sucesso!",
-        description: "Imóvel cadastrado com sucesso",
-      });
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso!",
+          description: "Imóvel atualizado com sucesso",
+        });
+      } else {
+        // Inserir novo imóvel
+        const { error } = await supabase
+          .from('properties')
+          .insert({
+            ...propertyData,
+            owner_id: user.id,
+            is_available: true,
+          } as any);
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso!",
+          description: "Imóvel cadastrado com sucesso",
+        });
+      }
 
       // Recarregar estatísticas e propriedades
       await loadStats();
       await loadProperties();
       
-      // Voltar para a lista
+      // Voltar para a lista e resetar
       setShowForm(false);
-      
-      // Resetar formulário
+      setEditingProperty(null);
       setImages([]);
       setImagePreviews([]);
       setSelectedAmenities([]);
+      reset();
     } catch (error: any) {
-      console.error("Erro ao cadastrar imóvel:", error);
+      console.error("Erro ao salvar imóvel:", error);
       toast({
-        title: "Erro ao cadastrar",
-        description: error.message || "Ocorreu um erro ao cadastrar o imóvel",
+        title: editingProperty ? "Erro ao atualizar" : "Erro ao cadastrar",
+        description: error.message || "Ocorreu um erro ao salvar o imóvel",
         variant: "destructive",
       });
     } finally {
@@ -390,11 +435,13 @@ const AddProperty = () => {
 
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              {showForm ? "Cadastrar Novo Imóvel" : "Meus Imóveis"}
+              {showForm ? (editingProperty ? "Editar Imóvel" : "Cadastrar Novo Imóvel") : "Meus Imóveis"}
             </h1>
             <p className="text-muted-foreground">
               {showForm 
-                ? "Preencha os dados abaixo para adicionar seu imóvel à plataforma"
+                ? (editingProperty 
+                    ? "Atualize as informações do seu imóvel" 
+                    : "Preencha os dados abaixo para adicionar seu imóvel à plataforma")
                 : "Gerencie seus imóveis cadastrados e acompanhe suas estatísticas"
               }
             </p>
@@ -466,7 +513,14 @@ const AddProperty = () => {
               {/* Botão para adicionar novo imóvel */}
               <div className="mb-8 flex justify-end">
                 <Button
-                  onClick={() => setShowForm(true)}
+                  onClick={() => {
+                    setShowForm(true);
+                    setEditingProperty(null);
+                    setImages([]);
+                    setImagePreviews([]);
+                    setSelectedAmenities([]);
+                    reset();
+                  }}
                   size="lg"
                   className="gap-2"
                 >
@@ -484,7 +538,14 @@ const AddProperty = () => {
                     <p className="text-muted-foreground mb-6">
                       Comece adicionando seu primeiro imóvel à plataforma
                     </p>
-                    <Button onClick={() => setShowForm(true)} className="gap-2">
+                    <Button onClick={() => {
+                      setShowForm(true);
+                      setEditingProperty(null);
+                      setImages([]);
+                      setImagePreviews([]);
+                      setSelectedAmenities([]);
+                      reset();
+                    }} className="gap-2">
                       <Plus className="w-4 h-4" />
                       Cadastrar Primeiro Imóvel
                     </Button>
@@ -575,10 +636,7 @@ const AddProperty = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => toast({
-                                title: "Em desenvolvimento",
-                                description: "Função de edição em breve"
-                              })}
+                              onClick={() => handleEditProperty(property)}
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -885,7 +943,14 @@ const AddProperty = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/property-management")}
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingProperty(null);
+                  setImages([]);
+                  setImagePreviews([]);
+                  setSelectedAmenities([]);
+                  reset();
+                }}
                 className="flex-1"
               >
                 Cancelar
@@ -895,7 +960,10 @@ const AddProperty = () => {
                 disabled={isSubmitting}
                 className="flex-1"
               >
-                {isSubmitting ? "Cadastrando..." : "Cadastrar Imóvel"}
+                {isSubmitting 
+                  ? (editingProperty ? "Atualizando..." : "Cadastrando...") 
+                  : (editingProperty ? "Atualizar Imóvel" : "Cadastrar Imóvel")
+                }
               </Button>
             </div>
           </form>
