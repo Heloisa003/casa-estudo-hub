@@ -11,9 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   MapPin, Users, Star, Heart, Share2, Calendar, 
   Wifi, Car, PawPrint, Coffee, Shield,
-  MessageCircle, Phone, Mail, ChevronLeft, ChevronRight,
+  MessageCircle, Phone, ChevronLeft, ChevronRight,
   Home, Bed, Bath, Loader2
 } from "lucide-react";
+import { PropertyReviews } from "@/components/PropertyReviews";
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -147,23 +148,6 @@ const PropertyDetails = () => {
     return types[type] || type;
   };
 
-  const reviews = [
-    {
-      name: "Pedro Oliveira",
-      rating: 5,
-      date: "Há 2 semanas",
-      comment: "Lugar incrível! Ambiente super acolhedor e os moradores são muito receptivos. A localização é perfeita para quem estuda na USP.",
-      avatar: "/placeholder.svg"
-    },
-    {
-      name: "Julia Ferreira",
-      rating: 4,
-      date: "Há 1 mês",
-      comment: "Moradia bem estruturada e limpa. A única observação é que às vezes fica um pouco barulhento nos fins de semana.",
-      avatar: "/placeholder.svg"
-    },
-  ];
-
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
@@ -258,7 +242,7 @@ const PropertyDetails = () => {
             <div className="lg:col-span-2 space-y-8">
               {/* Property Info */}
               <div>
-                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between mb-4">
                   <div>
                     <h1 className="text-3xl font-bold text-foreground mb-2">
                       {property.title}
@@ -268,11 +252,6 @@ const PropertyDetails = () => {
                       <span>{property.neighborhood}, {property.city}/{property.state}</span>
                     </div>
                     <div className="flex items-center space-x-4 flex-wrap gap-2">
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 fill-accent text-accent mr-1" />
-                        <span className="font-medium">4.8</span>
-                        <span className="text-muted-foreground ml-1">(2 avaliações)</span>
-                      </div>
                       <Badge variant="secondary">{getPropertyTypeLabel(property.property_type)}</Badge>
                       <div className="flex items-center text-sm gap-3">
                         <div className="flex items-center">
@@ -348,42 +327,10 @@ const PropertyDetails = () => {
                 </CardContent>
               </Card>
 
-              {/* Roommates - Removido temporariamente */}
-
               {/* Reviews */}
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-xl font-semibold mb-4">Avaliações (2)</h2>
-                  <div className="space-y-6">
-                    {reviews.map((review, index) => (
-                      <div key={index} className="border-b border-border pb-6 last:border-b-0 last:pb-0">
-                        <div className="flex items-start space-x-4">
-                          <Avatar>
-                            <AvatarImage src={review.avatar} />
-                            <AvatarFallback>{review.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <h3 className="font-medium">{review.name}</h3>
-                              <div className="flex items-center">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`w-4 h-4 ${i < review.rating ? 'fill-accent text-accent' : 'text-muted-foreground'}`}
-                                  />
-                                ))}
-                              </div>
-                              <span className="text-sm text-muted-foreground">{review.date}</span>
-                            </div>
-                            <p className="text-muted-foreground leading-relaxed">{review.comment}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-6">
-                    <Button variant="outline">Ver todas as avaliações</Button>
-                  </div>
+                  <PropertyReviews propertyId={id!} />
                 </CardContent>
               </Card>
             </div>
