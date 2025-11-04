@@ -298,10 +298,12 @@ const PropertyDetails = () => {
                       <p className="text-sm text-muted-foreground">Vagas disponíveis</p>
                       <p className="text-lg font-semibold">{property.available_spots}</p>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Visualizações</p>
-                      <p className="text-lg font-semibold">{viewsCount}</p>
-                    </div>
+                    {user?.id === property.owner_id && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">Visualizações</p>
+                        <p className="text-lg font-semibold">{viewsCount}</p>
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm text-muted-foreground">Status</p>
                       <Badge variant={property.is_available ? "default" : "secondary"}>
