@@ -127,7 +127,7 @@ export const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xl font-semibold">Avaliações</h3>
-          {reviews.length > 0 && (
+          {reviews.length > 0 ? (
             <div className="flex items-center gap-2 mt-1">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -145,6 +145,10 @@ export const PropertyReviews = ({ propertyId }: PropertyReviewsProps) => {
                 {averageRating.toFixed(1)} ({reviews.length} avaliações)
               </span>
             </div>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-1">
+              Nenhuma avaliação ainda
+            </p>
           )}
         </div>
 
