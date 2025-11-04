@@ -228,6 +228,7 @@ export type Database = {
         | "apartamento"
         | "casa"
         | "kitnet"
+        | "comercial"
       user_type: "student" | "owner"
     }
     CompositeTypes: {
@@ -362,6 +363,7 @@ export const Constants = {
         "apartamento",
         "casa",
         "kitnet",
+        "comercial",
       ],
       user_type: ["student", "owner"],
     },

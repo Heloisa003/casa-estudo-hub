@@ -18,7 +18,7 @@ import { ArrowLeft, Upload, X, Home } from "lucide-react";
 
 const propertySchema = z.object({
   title: z.string().min(5, "Título deve ter no mínimo 5 caracteres").max(100, "Título muito longo"),
-  property_type: z.enum(["house", "apartment", "kitnet", "commercial"], {
+  property_type: z.enum(["casa", "apartamento", "kitnet", "quarto_individual", "quarto_compartilhado", "comercial"], {
     required_error: "Selecione o tipo do imóvel"
   }),
   price: z.string().min(1, "Preço é obrigatório"),
@@ -268,10 +268,12 @@ const AddProperty = () => {
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="house">Casa</SelectItem>
-                        <SelectItem value="apartment">Apartamento</SelectItem>
+                        <SelectItem value="casa">Casa</SelectItem>
+                        <SelectItem value="apartamento">Apartamento</SelectItem>
                         <SelectItem value="kitnet">Kitnet</SelectItem>
-                        <SelectItem value="commercial">Comercial</SelectItem>
+                        <SelectItem value="quarto_individual">Quarto Individual</SelectItem>
+                        <SelectItem value="quarto_compartilhado">Quarto Compartilhado</SelectItem>
+                        <SelectItem value="comercial">Comercial</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.property_type && (
