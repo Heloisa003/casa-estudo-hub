@@ -28,8 +28,24 @@ const PropertyDetails = () => {
   useEffect(() => {
     if (id) {
       loadPropertyDetails();
+      registerView();
     }
   }, [id]);
+
+  const registerView = async () => {
+    if (!id) return;
+    
+    try {
+      await supabase
+        .from('property_views')
+        .insert({
+          property_id: id,
+          user_id: user?.id || null
+        });
+    } catch (error) {
+      console.error('Erro ao registrar visualização:', error);
+    }
+  };
 
   const loadPropertyDetails = async () => {
     try {

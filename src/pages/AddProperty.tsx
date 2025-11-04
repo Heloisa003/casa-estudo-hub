@@ -101,10 +101,23 @@ const AddProperty = () => {
         .reduce((sum, p) => sum + Number(p.price), 0) || 0;
       const occupancy = total > 0 ? Math.round((occupied / total) * 100) : 0;
 
+      // Contar visualizações de todos os imóveis do usuário
+      let views = 0;
+      const propertyIds = properties?.map(p => p.id) || [];
+      
+      if (propertyIds.length > 0) {
+        const { count } = await supabase
+          .from('property_views')
+          .select('*', { count: 'exact', head: true })
+          .in('property_id', propertyIds);
+        
+        views = count || 0;
+      }
+
       setStats({
         totalProperties: total,
         activeProperties: active,
-        totalViews: 0, // Placeholder - pode adicionar coluna views depois
+        totalViews: views,
         monthlyRevenue: revenue,
         occupancyRate: occupancy
       });
