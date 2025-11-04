@@ -78,6 +78,16 @@ export const MessageNotifications = () => {
     };
   }, [user]);
 
+  // Also reload when returning to this component
+  useEffect(() => {
+    const handleFocus = () => {
+      loadUnreadMessages();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user]);
+
   const loadUnreadMessages = async () => {
     if (!user) return;
 
@@ -147,19 +157,18 @@ export const MessageNotifications = () => {
   const handleMessageClick = async (conversationId: string) => {
     // Mark messages as read before navigating
     if (user) {
-      await supabase
+      const { data: updatedMessages } = await supabase
         .from("messages")
         .update({ is_read: true })
         .eq("conversation_id", conversationId)
         .neq("sender_id", user.id)
-        .eq("is_read", false);
+        .eq("is_read", false)
+        .select();
 
-      // Update UI instantly - remove messages from this conversation
-      setUnreadMessages((prev) => prev.filter((m) => m.conversation_id !== conversationId));
-      
-      // Update count based on how many messages were from this conversation
-      const messagesFromConversation = unreadMessages.filter((m) => m.conversation_id === conversationId);
-      setUnreadCount((prev) => Math.max(0, prev - messagesFromConversation.length));
+      console.log("Messages marked as read:", updatedMessages);
+
+      // Force immediate reload of unread messages
+      await loadUnreadMessages();
     }
     
     setOpen(false);
