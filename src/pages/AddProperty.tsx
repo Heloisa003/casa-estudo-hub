@@ -261,9 +261,10 @@ const AddProperty = () => {
                   <div>
                     <Label htmlFor="property_type">Tipo do Imóvel *</Label>
                     <Select
-                      onValueChange={(value) => setValue("property_type", value as any)}
+                      value={propertyType}
+                      onValueChange={(value) => setValue("property_type", value as any, { shouldValidate: true })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id="property_type">
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                       <SelectContent>
