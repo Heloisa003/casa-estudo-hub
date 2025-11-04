@@ -63,6 +63,13 @@ const PropertyManagement = () => {
     setProfile(data);
   };
 
+  // Redirecionar se não for proprietário
+  useEffect(() => {
+    if (profile && profile.user_type !== 'owner') {
+      navigate('/dashboard');
+    }
+  }, [profile, navigate]);
+
   const loadProperties = async () => {
     if (!user) return;
     setLoading(true);

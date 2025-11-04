@@ -10,6 +10,7 @@ import { Eye, EyeOff, Loader2, User, Home } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { z } from "zod";
 import Header from "@/components/Header";
+import { supabase } from "@/integrations/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -73,7 +74,23 @@ const Login = () => {
       const { error } = await signIn(data.email, data.password);
       
       if (!error) {
-        navigate("/");
+        // Verificar tipo do usuário para redirecionamento correto
+        const { data: userResp } = await supabase.auth.getUser();
+        const uid = userResp.user?.id;
+        if (uid) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_type')
+            .eq('id', uid)
+            .maybeSingle();
+          if (profile?.user_type === 'owner') {
+            navigate("/property-management");
+          } else {
+            navigate("/");
+          }
+        } else {
+          navigate("/");
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -124,7 +141,16 @@ const Login = () => {
             : (error?.message || 'Erro ao criar conta. Tente novamente.'),
         });
       } else {
-        navigate("/");
+        // Se houve sessão imediata, direcionar conforme o tipo escolhido
+        const { data: sessionResp } = await supabase.auth.getSession();
+        if (sessionResp.session && data.user_type === 'owner') {
+          navigate("/property-management");
+        } else if (sessionResp.session) {
+          navigate("/");
+        } else {
+          // Sem sessão imediata (confirmação por email) volta para login
+          navigate("/login");
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
