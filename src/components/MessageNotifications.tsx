@@ -153,6 +153,13 @@ export const MessageNotifications = () => {
         .eq("conversation_id", conversationId)
         .neq("sender_id", user.id)
         .eq("is_read", false);
+
+      // Update UI instantly - remove messages from this conversation
+      setUnreadMessages((prev) => prev.filter((m) => m.conversation_id !== conversationId));
+      
+      // Update count based on how many messages were from this conversation
+      const messagesFromConversation = unreadMessages.filter((m) => m.conversation_id === conversationId);
+      setUnreadCount((prev) => Math.max(0, prev - messagesFromConversation.length));
     }
     
     setOpen(false);
