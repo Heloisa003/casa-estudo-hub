@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, X, Home } from "lucide-react";
+import { ArrowLeft, Upload, X, Home, TrendingUp, DollarSign, Users, Eye } from "lucide-react";
 
 const propertySchema = z.object({
   title: z.string().min(5, "Título deve ter no mínimo 5 caracteres").max(100, "Título muito longo"),
@@ -56,6 +56,13 @@ const AddProperty = () => {
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [stats, setStats] = useState({
+    totalProperties: 0,
+    activeProperties: 0,
+    totalViews: 0,
+    monthlyRevenue: 0,
+    occupancyRate: 0
+  });
 
   const {
     register,
@@ -68,6 +75,43 @@ const AddProperty = () => {
   });
 
   const propertyType = watch("property_type");
+
+  useEffect(() => {
+    if (user) {
+      loadStats();
+    }
+  }, [user]);
+
+  const loadStats = async () => {
+    if (!user) return;
+
+    try {
+      const { data: properties, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('owner_id', user.id);
+
+      if (error) throw error;
+
+      const total = properties?.length || 0;
+      const active = properties?.filter(p => p.is_available).length || 0;
+      const occupied = total - active;
+      const revenue = properties
+        ?.filter(p => !p.is_available)
+        .reduce((sum, p) => sum + Number(p.price), 0) || 0;
+      const occupancy = total > 0 ? Math.round((occupied / total) * 100) : 0;
+
+      setStats({
+        totalProperties: total,
+        activeProperties: active,
+        totalViews: 0, // Placeholder - pode adicionar coluna views depois
+        monthlyRevenue: revenue,
+        occupancyRate: occupancy
+      });
+    } catch (error: any) {
+      console.error("Erro ao carregar estatísticas:", error);
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -197,6 +241,9 @@ const AddProperty = () => {
         description: "Imóvel cadastrado com sucesso",
       });
 
+      // Recarregar estatísticas
+      await loadStats();
+
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Erro ao cadastrar imóvel:", error);
@@ -232,6 +279,67 @@ const AddProperty = () => {
             <p className="text-muted-foreground">
               Preencha os dados abaixo para adicionar seu imóvel à plataforma
             </p>
+          </div>
+
+          {/* Estatísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <Card className="bg-gradient-to-br from-secondary/20 to-secondary/5 border-secondary/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Imóveis Ativos</p>
+                    <p className="text-2xl font-bold text-secondary">{stats.activeProperties}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {stats.totalProperties} total
+                    </p>
+                  </div>
+                  <Home className="w-8 h-8 text-secondary opacity-50" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-accent/20 to-accent/5 border-accent/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Visualizações</p>
+                    <p className="text-2xl font-bold text-accent">{stats.totalViews}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Este mês</p>
+                  </div>
+                  <Eye className="w-8 h-8 text-accent opacity-50" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-green-500/20 to-green-500/5 border-green-500/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Ganhos Mensais</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      R$ {stats.monthlyRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Imóveis ocupados</p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-green-600 opacity-50" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border-blue-500/20">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Taxa de Ocupação</p>
+                    <p className="text-2xl font-bold text-blue-600">{stats.occupancyRate}%</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {stats.totalProperties - stats.activeProperties} ocupados
+                    </p>
+                  </div>
+                  <Users className="w-8 h-8 text-blue-600 opacity-50" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
