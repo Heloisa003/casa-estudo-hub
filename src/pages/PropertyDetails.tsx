@@ -25,6 +25,7 @@ const PropertyDetails = () => {
   const [property, setProperty] = useState<any>(null);
   const [owner, setOwner] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [viewsCount, setViewsCount] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -71,6 +72,13 @@ const PropertyDetails = () => {
           .single();
         setOwner(ownerData);
       }
+
+      // Contar visualizações
+      const { count } = await supabase
+        .from('property_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('property_id', id);
+      setViewsCount(count || 0);
 
       // Verificar se está favoritado
       if (user) {
@@ -289,6 +297,10 @@ const PropertyDetails = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Vagas disponíveis</p>
                       <p className="text-lg font-semibold">{property.available_spots}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Visualizações</p>
+                      <p className="text-lg font-semibold">{viewsCount}</p>
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Status</p>
