@@ -31,8 +31,7 @@ const PropertyManagement = () => {
       iconColor: "text-secondary",
       borderColor: "border-secondary/20",
       action: () => {
-        // TODO: Navegar para formulário de cadastro
-        console.log("Adicionar imóvel");
+        navigate("/add-property");
       }
     },
     {
