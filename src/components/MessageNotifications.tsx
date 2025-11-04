@@ -145,6 +145,16 @@ export const MessageNotifications = () => {
   };
 
   const handleMessageClick = async (conversationId: string) => {
+    // Mark messages as read before navigating
+    if (user) {
+      await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("conversation_id", conversationId)
+        .neq("sender_id", user.id)
+        .eq("is_read", false);
+    }
+    
     setOpen(false);
     // Navigate to property management with conversation ID as query param
     navigate(`/property-management?conversation=${conversationId}&tab=messages`);
