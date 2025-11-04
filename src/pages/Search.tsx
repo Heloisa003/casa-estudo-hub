@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,13 +6,52 @@ import { Badge } from "@/components/ui/badge";
 import PropertyCard from "@/components/PropertyCard";
 import Header from "@/components/Header";
 import { MapPin, Search, SlidersHorizontal, Grid, List, Map } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { mockProperties } from "@/data/mockProperties";
 
 const SearchPage = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const properties = mockProperties;
+  useEffect(() => {
+    loadProperties();
+  }, []);
+
+  const loadProperties = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('is_available', true)
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      // Transformar dados do Supabase para o formato esperado pelo PropertyCard
+      const transformedData = data.map(prop => ({
+        id: prop.id,
+        title: prop.title,
+        location: `${prop.neighborhood}, ${prop.city}`,
+        price: Number(prop.price),
+        rating: 4.8,
+        reviews: 0,
+        image: prop.images?.[0] || "/placeholder.svg",
+        images: prop.images,
+        type: prop.property_type,
+        roommates: prop.max_occupants - 1,
+        amenities: prop.amenities || [],
+        premium: prop.is_premium,
+        address: prop.address,
+        ...prop
+      }));
+      setProperties(transformedData);
+    } else {
+      // Se não houver dados, usar mockProperties como fallback
+      setProperties(mockProperties);
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,14 +124,14 @@ const SearchPage = () => {
           <div className="container mx-auto px-4 lg:px-8">
             {/* Results Header */}
             <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">
-                  156 moradias encontradas
-                </h2>
-                <p className="text-muted-foreground">
-                  Resultados para "São Paulo" • Ordenado por relevância
-                </p>
-              </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">
+                {loading ? "Carregando..." : `${properties.length} moradias encontradas`}
+              </h2>
+              <p className="text-muted-foreground">
+                {loading ? "Buscando imóveis disponíveis..." : "Ordenado por mais recentes"}
+              </p>
+            </div>
               
               <div className="flex items-center space-x-2">
                 <Button
@@ -174,11 +213,26 @@ const SearchPage = () => {
 
             {/* Results Grid */}
             {!showFilters && (
-              <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-                {properties.map((property) => (
-                  <PropertyCard key={property.id} property={property} />
-                ))}
-              </div>
+              loading ? (
+                <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="h-96 bg-muted animate-pulse rounded-lg"></div>
+                  ))}
+                </div>
+              ) : properties.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <h3 className="text-lg font-semibold mb-2">Nenhum imóvel encontrado</h3>
+                  <p className="text-muted-foreground">
+                    Não há imóveis disponíveis no momento. Tente novamente mais tarde.
+                  </p>
+                </Card>
+              ) : (
+                <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+                  {properties.map((property) => (
+                    <PropertyCard key={property.id} property={property} />
+                  ))}
+                </div>
+              )
             )}
 
             {/* Load More */}
