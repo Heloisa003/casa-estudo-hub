@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Header from "@/components/Header";
 import { ProfileEditForm } from "@/components/ProfileEditForm";
+import { ConversationsList } from "@/components/ConversationsList";
+import { ChatMessages } from "@/components/ChatMessages";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +44,7 @@ const PropertyManagement = () => {
   const [profile, setProfile] = useState<any>(null);
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>();
   const [activeTab, setActiveTab] = useState("properties");
 
   useEffect(() => {
@@ -450,16 +453,26 @@ const PropertyManagement = () => {
             </TabsContent>
 
             {/* Mensagens Tab */}
-            <TabsContent value="messages" className="space-y-6">
-              <h2 className="text-xl font-semibold">Mensagens de Interessados</h2>
-              
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <MessageCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">Nenhuma mensagem ainda</h3>
-                  <p className="text-muted-foreground">
-                    Quando alguém demonstrar interesse em seus imóveis, as mensagens aparecerão aqui.
-                  </p>
+            <TabsContent value="messages" className="space-y-4">
+              <Card className="h-[600px]">
+                <CardContent className="p-0 h-full">
+                  <div className="grid grid-cols-1 md:grid-cols-3 h-full">
+                    <div className="border-r overflow-y-auto">
+                      <ConversationsList
+                        onSelectConversation={setSelectedConversationId}
+                        selectedConversationId={selectedConversationId}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      {selectedConversationId ? (
+                        <ChatMessages conversationId={selectedConversationId} />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                          Selecione uma conversa para começar
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

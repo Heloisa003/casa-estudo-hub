@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +16,7 @@ import {
   Home, Bed, Bath, Loader2
 } from "lucide-react";
 import { PropertyReviews } from "@/components/PropertyReviews";
+import { ChatMessages } from "@/components/ChatMessages";
 
 const PropertyDetails = () => {
   const { id } = useParams();
@@ -26,6 +28,8 @@ const PropertyDetails = () => {
   const [owner, setOwner] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [viewsCount, setViewsCount] = useState(0);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -162,6 +166,65 @@ const PropertyDetails = () => {
 
   const prevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const handleContactOwner = async () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para entrar em contato",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (user.id === property.owner_id) {
+      toast({
+        title: "Aviso",
+        description: "Você não pode enviar mensagem para si mesmo",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if conversation already exists
+    const { data: existingConversation } = await supabase
+      .from("conversations")
+      .select("id")
+      .eq("property_id", property.id)
+      .eq("tenant_id", user.id)
+      .eq("owner_id", property.owner_id)
+      .single();
+
+    if (existingConversation) {
+      setConversationId(existingConversation.id);
+      setShowMessageDialog(true);
+      return;
+    }
+
+    // Create new conversation
+    const { data: newConversation, error } = await supabase
+      .from("conversations")
+      .insert({
+        property_id: property.id,
+        tenant_id: user.id,
+        owner_id: property.owner_id,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao iniciar conversa",
+        variant: "destructive"
+      });
+      console.error("Error creating conversation:", error);
+      return;
+    }
+
+    setConversationId(newConversation.id);
+    setShowMessageDialog(true);
   };
 
   return (
@@ -374,11 +437,13 @@ const PropertyDetails = () => {
                   </div>
 
                   <div className="space-y-3 mb-6">
-                    <Button variant="hero" className="w-full" size="lg">
-                      <MessageCircle className="w-4 h-4" />
-                      Enviar Mensagem
-                    </Button>
-                    {owner?.phone && (
+                    {user?.id !== property.owner_id && (
+                      <Button variant="hero" className="w-full" size="lg" onClick={handleContactOwner}>
+                        <MessageCircle className="w-4 h-4" />
+                        Enviar Mensagem
+                      </Button>
+                    )}
+                    {owner?.phone && user?.id !== property.owner_id && (
                       <Button variant="outline" className="w-full">
                         <Phone className="w-4 h-4" />
                         Ligar
@@ -413,6 +478,17 @@ const PropertyDetails = () => {
             </div>
           </div>
         </div>
+
+        <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+          <DialogContent className="max-w-4xl h-[600px] p-0">
+            <DialogHeader className="px-6 pt-6">
+              <DialogTitle>Conversa sobre {property?.title}</DialogTitle>
+            </DialogHeader>
+            <div className="h-[calc(600px-80px)]">
+              {conversationId && <ChatMessages conversationId={conversationId} />}
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
       )}
     </div>
