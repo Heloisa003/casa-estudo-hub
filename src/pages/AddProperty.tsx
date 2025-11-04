@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Upload, X, Home, TrendingUp, DollarSign, Users, Eye } from "lucide-react";
+import { ArrowLeft, Upload, X, Home, TrendingUp, DollarSign, Users, Eye, Plus, MapPin, Bed, Bath } from "lucide-react";
 
 const propertySchema = z.object({
   title: z.string().min(5, "Título deve ter no mínimo 5 caracteres").max(100, "Título muito longo"),
@@ -52,6 +52,8 @@ const AddProperty = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showForm, setShowForm] = useState(false);
+  const [properties, setProperties] = useState<any[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -79,6 +81,7 @@ const AddProperty = () => {
   useEffect(() => {
     if (user) {
       loadStats();
+      loadProperties();
     }
   }, [user]);
 
@@ -123,6 +126,23 @@ const AddProperty = () => {
       });
     } catch (error: any) {
       console.error("Erro ao carregar estatísticas:", error);
+    }
+  };
+
+  const loadProperties = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProperties(data || []);
+    } catch (error: any) {
+      console.error("Erro ao carregar imóveis:", error);
     }
   };
 
@@ -254,10 +274,17 @@ const AddProperty = () => {
         description: "Imóvel cadastrado com sucesso",
       });
 
-      // Recarregar estatísticas
+      // Recarregar estatísticas e propriedades
       await loadStats();
-
-      navigate("/dashboard");
+      await loadProperties();
+      
+      // Voltar para a lista
+      setShowForm(false);
+      
+      // Resetar formulário
+      setImages([]);
+      setImagePreviews([]);
+      setSelectedAmenities([]);
     } catch (error: any) {
       console.error("Erro ao cadastrar imóvel:", error);
       toast({
@@ -270,15 +297,27 @@ const AddProperty = () => {
     }
   };
 
+  const getPropertyTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      casa: "Casa",
+      apartamento: "Apartamento",
+      kitnet: "Kitnet",
+      quarto_individual: "Quarto Individual",
+      quarto_compartilhado: "Quarto Compartilhado",
+      comercial: "Comercial"
+    };
+    return types[type] || type;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
       <main className="pt-20">
-        <div className="container mx-auto px-4 lg:px-8 py-12 max-w-4xl">
+        <div className="container mx-auto px-4 lg:px-8 py-12 max-w-6xl">
           <Button
             variant="ghost"
-            onClick={() => navigate(-1)}
+            onClick={() => showForm ? setShowForm(false) : navigate(-1)}
             className="mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -287,10 +326,13 @@ const AddProperty = () => {
 
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Cadastrar Novo Imóvel
+              {showForm ? "Cadastrar Novo Imóvel" : "Meus Imóveis"}
             </h1>
             <p className="text-muted-foreground">
-              Preencha os dados abaixo para adicionar seu imóvel à plataforma
+              {showForm 
+                ? "Preencha os dados abaixo para adicionar seu imóvel à plataforma"
+                : "Gerencie seus imóveis cadastrados e acompanhe suas estatísticas"
+              }
             </p>
           </div>
 
@@ -355,7 +397,98 @@ const AddProperty = () => {
             </Card>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {!showForm ? (
+            <>
+              {/* Botão para adicionar novo imóvel */}
+              <div className="mb-8 flex justify-end">
+                <Button
+                  onClick={() => setShowForm(true)}
+                  size="lg"
+                  className="gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Adicionar Novo Imóvel
+                </Button>
+              </div>
+
+              {/* Lista de Imóveis */}
+              {properties.length === 0 ? (
+                <Card className="p-12">
+                  <div className="text-center">
+                    <Home className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                    <h3 className="text-xl font-semibold mb-2">Nenhum imóvel cadastrado</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Comece adicionando seu primeiro imóvel à plataforma
+                    </p>
+                    <Button onClick={() => setShowForm(true)} className="gap-2">
+                      <Plus className="w-4 h-4" />
+                      Cadastrar Primeiro Imóvel
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {properties.map((property) => (
+                    <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                      <div className="relative h-48">
+                        <img
+                          src={property.images?.[0] || "/placeholder.svg"}
+                          alt={property.title}
+                          className="w-full h-full object-cover"
+                        />
+                        {!property.is_available && (
+                          <div className="absolute top-2 right-2 bg-destructive text-destructive-foreground px-2 py-1 rounded text-xs font-semibold">
+                            Ocupado
+                          </div>
+                        )}
+                        {property.is_available && (
+                          <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold">
+                            Disponível
+                          </div>
+                        )}
+                      </div>
+                      <CardContent className="p-4">
+                        <h3 className="font-bold text-lg mb-2 line-clamp-1">{property.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-3 flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          {property.neighborhood}, {property.city} - {property.state}
+                        </p>
+                        <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Bed className="w-4 h-4" />
+                            {property.bedrooms}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Bath className="w-4 h-4" />
+                            {property.bathrooms}
+                          </span>
+                          <span className="text-xs bg-secondary/20 px-2 py-1 rounded">
+                            {getPropertyTypeLabel(property.property_type)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-2xl font-bold text-primary">
+                              R$ {Number(property.price).toLocaleString('pt-BR')}
+                            </p>
+                            <p className="text-xs text-muted-foreground">por mês</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/property/${property.id}`)}
+                          >
+                            Ver Detalhes
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Informações Básicas */}
             <Card>
               <CardHeader>
@@ -656,6 +789,7 @@ const AddProperty = () => {
               </Button>
             </div>
           </form>
+          )}
         </div>
       </main>
     </div>
