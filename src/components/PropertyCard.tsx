@@ -33,10 +33,15 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
     e.preventDefault();
     e.stopPropagation();
     
+    setIsAnimating(true);
     const success = await toggleFavorite(property.id);
+    
     if (success) {
-      setIsAnimating(true);
+      // Animação de sucesso
       setTimeout(() => setIsAnimating(false), 600);
+    } else {
+      // Se falhar, remover animação imediatamente
+      setIsAnimating(false);
     }
   };
 
@@ -66,16 +71,18 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
         <button 
           onClick={handleFavoriteClick}
           className={cn(
-            "absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full hover:bg-background transition-all duration-300",
+            "absolute top-3 right-3 p-2 bg-background/90 backdrop-blur-sm rounded-full hover:bg-background hover:shadow-lg transition-all duration-300 z-10",
             isAnimating && "animate-scale-in"
           )}
+          aria-label={favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
         >
           <Heart 
             className={cn(
               "w-5 h-5 transition-all duration-300",
               favorited 
-                ? "fill-red-500 text-red-500 scale-110" 
-                : "text-muted-foreground hover:text-red-500 hover:scale-110"
+                ? "fill-red-500 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" 
+                : "text-muted-foreground hover:text-red-500",
+              isAnimating && (favorited ? "animate-[scale-in_0.3s_ease-out]" : "animate-fade-in")
             )} 
           />
         </button>

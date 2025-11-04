@@ -401,10 +401,14 @@ const Dashboard = () => {
                                       <Button 
                                         variant="outline" 
                                         size="sm"
-                                        onClick={() => toggleFavorite(property.id)}
+                                        onClick={async () => {
+                                          await toggleFavorite(property.id);
+                                          // A lista será atualizada automaticamente pelo useEffect
+                                        }}
+                                        className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 transition-all duration-300"
                                       >
-                                        <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-                                        Remover
+                                        <Heart className="w-4 h-4 fill-red-500 text-red-500 transition-transform hover:scale-110" />
+                                        Remover dos Favoritos
                                       </Button>
                                       <Button variant="cta" size="sm">
                                         <MessageCircle className="w-4 h-4" />
