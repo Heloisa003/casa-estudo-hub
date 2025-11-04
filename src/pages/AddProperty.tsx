@@ -197,7 +197,7 @@ const AddProperty = () => {
         description: "Imóvel cadastrado com sucesso",
       });
 
-      navigate("/property-management");
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Erro ao cadastrar imóvel:", error);
       toast({
@@ -218,7 +218,7 @@ const AddProperty = () => {
         <div className="container mx-auto px-4 lg:px-8 py-12 max-w-4xl">
           <Button
             variant="ghost"
-            onClick={() => navigate("/property-management")}
+            onClick={() => navigate(-1)}
             className="mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
