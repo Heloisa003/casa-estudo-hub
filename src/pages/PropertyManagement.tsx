@@ -47,6 +47,7 @@ const PropertyManagement = () => {
   const [loading, setLoading] = useState(true);
   const [selectedConversationId, setSelectedConversationId] = useState<string | undefined>();
   const [activeTab, setActiveTab] = useState("properties");
+  const [totalViews, setTotalViews] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -91,6 +92,17 @@ const PropertyManagement = () => {
     
     if (!error && data) {
       setProperties(data);
+      
+      // Carregar visualizações reais
+      const propertyIds = data.map(p => p.id);
+      if (propertyIds.length > 0) {
+        const { count } = await supabase
+          .from('property_views')
+          .select('*', { count: 'exact', head: true })
+          .in('property_id', propertyIds);
+        
+        setTotalViews(count || 0);
+      }
     }
     setLoading(false);
   };
@@ -202,8 +214,8 @@ const PropertyManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Visualizações</p>
-                    <p className="text-3xl font-bold text-accent">1,234</p>
-                    <p className="text-xs text-green-600 mt-1">↑ 12% este mês</p>
+                    <p className="text-3xl font-bold text-accent">{totalViews}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total</p>
                   </div>
                   <Eye className="w-10 h-10 text-accent" />
                 </div>
