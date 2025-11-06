@@ -64,7 +64,7 @@ const AddProperty = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
   const [properties, setProperties] = useState<any[]>([]);
   const [deletePropertyId, setDeletePropertyId] = useState<string | null>(null);
   const [editingProperty, setEditingProperty] = useState<any | null>(null);
