@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import PropertyManagement from "./pages/PropertyManagement";
 import AddProperty from "./pages/AddProperty";
 import HowItWorks from "./pages/HowItWorks";
+import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/property-management" element={<PropertyManagement />} />
           <Route path="/add-property" element={<AddProperty />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

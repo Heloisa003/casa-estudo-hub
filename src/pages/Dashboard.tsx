@@ -648,52 +648,69 @@ const Dashboard = () => {
                       </div>
                     </Card>
                   ) : (
-                    <div className="space-y-4">
-                      {conversations.map((conversation) => (
-                        <Card 
-                          key={conversation.id} 
-                          className={`cursor-pointer hover:shadow-medium transition-shadow ${conversation.isUnread ? 'border-secondary' : ''}`}
-                          onClick={() => window.location.href = `/dashboard?conversation=${conversation.id}`}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-center space-x-4">
-                              <Avatar>
-                                <AvatarImage src={conversation.otherUserAvatar} />
-                                <AvatarFallback>
-                                  {conversation.otherUserName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between mb-1">
-                                  <h3 className={`font-medium truncate ${conversation.isUnread ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                    {conversation.otherUserName}
-                                  </h3>
-                                  {conversation.lastMessageTime && (
-                                    <span className="text-sm text-muted-foreground flex-shrink-0 ml-2">
-                                      {formatDistanceToNow(new Date(conversation.lastMessageTime), { 
-                                        addSuffix: true,
-                                        locale: ptBR 
-                                      })}
-                                    </span>
-                                  )}
+                    <>
+                      <Button variant="cta" asChild className="w-full">
+                        <a href="/messages">
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Abrir Central de Mensagens
+                        </a>
+                      </Button>
+                      
+                      <div className="space-y-4">
+                        {conversations.slice(0, 3).map((conversation) => (
+                          <Card 
+                            key={conversation.id} 
+                            className={`cursor-pointer hover:shadow-medium transition-shadow ${conversation.unreadCount > 0 ? 'border-secondary' : ''}`}
+                            onClick={() => window.location.href = `/messages?conversation=${conversation.id}`}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-center space-x-4">
+                                <Avatar>
+                                  <AvatarImage src={conversation.otherUserAvatar} />
+                                  <AvatarFallback>
+                                    {conversation.otherUserName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <h3 className={`font-medium truncate ${conversation.unreadCount > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                      {conversation.otherUserName}
+                                    </h3>
+                                    {conversation.lastMessageTime && (
+                                      <span className="text-sm text-muted-foreground flex-shrink-0 ml-2">
+                                        {formatDistanceToNow(new Date(conversation.lastMessageTime), { 
+                                          addSuffix: true,
+                                          locale: ptBR 
+                                        })}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mb-1 truncate">
+                                    {conversation.propertyTitle}
+                                  </p>
+                                  <p className={`text-sm truncate ${conversation.unreadCount > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                                    {conversation.lastMessage}
+                                  </p>
                                 </div>
-                                <p className="text-xs text-muted-foreground mb-1 truncate">
-                                  {conversation.propertyTitle}
-                                </p>
-                                <p className={`text-sm truncate ${conversation.isUnread ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                                  {conversation.lastMessage}
-                                </p>
+                                {conversation.unreadCount > 0 && (
+                                  <Badge variant="secondary" className="flex-shrink-0">
+                                    {conversation.unreadCount}
+                                  </Badge>
+                                )}
                               </div>
-                              {conversation.isUnread && (
-                                <Badge variant="secondary" className="flex-shrink-0">
-                                  {conversation.unreadCount}
-                                </Badge>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                        
+                        {conversations.length > 3 && (
+                          <div className="text-center pt-2">
+                            <Button variant="outline" asChild>
+                              <a href="/messages">Ver todas as {conversations.length} conversas</a>
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </>
                   )}
                 </TabsContent>
 
@@ -768,9 +785,11 @@ const Dashboard = () => {
                     <Plus className="w-4 h-4 mr-2" />
                     {userType === 'student' ? 'Criar Alerta de Busca' : 'Adicionar Propriedade'}
                   </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Ver Todas as Mensagens
+                  <Button variant="outline" className="w-full justify-start" asChild>
+                    <a href="/messages">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Ver Todas as Mensagens
+                    </a>
                   </Button>
                   <Button variant="outline" className="w-full justify-start">
                     <Star className="w-4 h-4 mr-2" />
