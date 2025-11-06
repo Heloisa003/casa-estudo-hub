@@ -280,13 +280,7 @@ const PropertyManagement = () => {
 
             {/* Meus Imóveis Tab */}
             <TabsContent value="properties" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Minhas Propriedades</h2>
-                <Button variant="cta" onClick={() => navigate("/add-property")}>
-                  <Plus className="w-4 h-4" />
-                  Adicionar Propriedade
-                </Button>
-              </div>
+              <h2 className="text-xl font-semibold mb-6">Minhas Propriedades</h2>
 
               {loading ? (
                 <Card className="p-12 text-center">
