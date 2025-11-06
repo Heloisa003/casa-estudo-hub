@@ -26,6 +26,8 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<any | null>(null);
   const [favoriteProperties, setFavoriteProperties] = useState<any[]>([]);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const userType: 'student' | 'owner' = profile?.user_type === 'owner' ? 'owner' : 'student';
 
   useEffect(() => {
@@ -39,6 +41,107 @@ const Dashboard = () => {
       setProfile(data || null);
     };
     load();
+  }, [user]);
+
+  // Carregar conversas e mensagens
+  useEffect(() => {
+    const loadConversations = async () => {
+      if (!user) return;
+
+      const { data: conversationsData, error } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          property_id,
+          tenant_id,
+          owner_id,
+          updated_at,
+          properties(title, images),
+          tenant:profiles!conversations_tenant_id_fkey(full_name, avatar_url),
+          owner:profiles!conversations_owner_id_fkey(full_name, avatar_url)
+        `)
+        .or(`tenant_id.eq.${user.id},owner_id.eq.${user.id}`)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading conversations:', error);
+        return;
+      }
+
+      if (!conversationsData) {
+        setConversations([]);
+        return;
+      }
+
+      // Para cada conversa, buscar a última mensagem e contar não lidas
+      const conversationsWithMessages = await Promise.all(
+        conversationsData.map(async (conv) => {
+          // Buscar última mensagem
+          const { data: lastMessage } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', conv.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          // Contar mensagens não lidas (enviadas pelo outro usuário)
+          const { count: unreadCount } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', conv.id)
+            .eq('is_read', false)
+            .neq('sender_id', user.id);
+
+          // Determinar qual é o outro usuário
+          const isUserTenant = conv.tenant_id === user.id;
+          const otherUser = isUserTenant ? conv.owner : conv.tenant;
+
+          return {
+            id: conv.id,
+            propertyTitle: (conv.properties as any)?.title || 'Propriedade',
+            propertyImage: (conv.properties as any)?.images?.[0],
+            otherUserName: (otherUser as any)?.full_name || 'Usuário',
+            otherUserAvatar: (otherUser as any)?.avatar_url,
+            lastMessage: lastMessage?.content || 'Sem mensagens',
+            lastMessageTime: lastMessage?.created_at,
+            unreadCount: unreadCount || 0,
+            isUnread: (unreadCount || 0) > 0,
+          };
+        })
+      );
+
+      setConversations(conversationsWithMessages);
+
+      // Calcular total de mensagens não lidas
+      const totalUnread = conversationsWithMessages.reduce(
+        (sum, conv) => sum + conv.unreadCount,
+        0
+      );
+      setUnreadCount(totalUnread);
+    };
+
+    loadConversations();
+
+    // Configurar realtime para atualizar quando houver novas mensagens
+    const channel = supabase
+      .channel('conversations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        },
+        () => {
+          loadConversations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   // Carregar atividades recentes
@@ -222,33 +325,6 @@ const Dashboard = () => {
       views: 89,
       inquiries: 3,
       rating: 4.6
-    },
-  ];
-
-  const messages = [
-    {
-      id: "1",
-      name: "Maria Santos",
-      message: "Olá! Gostaria de agendar uma visita para o quarto...",
-      time: "2 min",
-      unread: true,
-      avatar: "/placeholder.svg"
-    },
-    {
-      id: "2",
-      name: "João Silva",
-      message: "Obrigado pela resposta! Quando posso ir ver?",
-      time: "1h",
-      unread: true,
-      avatar: "/placeholder.svg"
-    },
-    {
-      id: "3",
-      name: "Ana Costa",
-      message: "Perfeito! Nos vemos amanhã então.",
-      time: "1 dia",
-      unread: false,
-      avatar: "/placeholder.svg"
     },
   ];
 
@@ -551,37 +627,74 @@ const Dashboard = () => {
                 <TabsContent value="messages" className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold">Mensagens</h2>
-                    <Badge variant="secondary">3 não lidas</Badge>
+                    {unreadCount > 0 && (
+                      <Badge variant="secondary">{unreadCount} não lida{unreadCount > 1 ? 's' : ''}</Badge>
+                    )}
                   </div>
 
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <Card key={message.id} className={`cursor-pointer hover:shadow-medium transition-shadow ${message.unread ? 'border-secondary' : ''}`}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center space-x-4">
-                            <Avatar>
-                              <AvatarImage src={message.avatar} />
-                              <AvatarFallback>{message.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <h3 className={`font-medium ${message.unread ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                  {message.name}
-                                </h3>
-                                <span className="text-sm text-muted-foreground">{message.time}</span>
+                  {conversations.length === 0 ? (
+                    <Card className="text-center p-12">
+                      <div className="flex flex-col items-center space-y-4">
+                        <MessageCircle className="w-16 h-16 text-muted-foreground" />
+                        <div>
+                          <h3 className="text-lg font-semibold mb-2">Nenhuma mensagem ainda</h3>
+                          <p className="text-muted-foreground mb-4">
+                            Suas conversas aparecerão aqui quando você entrar em contato com proprietários ou estudantes.
+                          </p>
+                          <Button variant="cta" asChild>
+                            <a href="/search">Explorar Imóveis</a>
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {conversations.map((conversation) => (
+                        <Card 
+                          key={conversation.id} 
+                          className={`cursor-pointer hover:shadow-medium transition-shadow ${conversation.isUnread ? 'border-secondary' : ''}`}
+                          onClick={() => window.location.href = `/dashboard?conversation=${conversation.id}`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center space-x-4">
+                              <Avatar>
+                                <AvatarImage src={conversation.otherUserAvatar} />
+                                <AvatarFallback>
+                                  {conversation.otherUserName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h3 className={`font-medium truncate ${conversation.isUnread ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                    {conversation.otherUserName}
+                                  </h3>
+                                  {conversation.lastMessageTime && (
+                                    <span className="text-sm text-muted-foreground flex-shrink-0 ml-2">
+                                      {formatDistanceToNow(new Date(conversation.lastMessageTime), { 
+                                        addSuffix: true,
+                                        locale: ptBR 
+                                      })}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mb-1 truncate">
+                                  {conversation.propertyTitle}
+                                </p>
+                                <p className={`text-sm truncate ${conversation.isUnread ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                                  {conversation.lastMessage}
+                                </p>
                               </div>
-                              <p className={`text-sm ${message.unread ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                {message.message}
-                              </p>
+                              {conversation.isUnread && (
+                                <Badge variant="secondary" className="flex-shrink-0">
+                                  {conversation.unreadCount}
+                                </Badge>
+                              )}
                             </div>
-                            {message.unread && (
-                              <div className="w-3 h-3 bg-secondary rounded-full" />
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </TabsContent>
 
                 {/* Contracts */}
