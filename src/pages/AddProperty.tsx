@@ -540,25 +540,6 @@ const AddProperty = () => {
 
           {!showForm ? (
             <>
-              {/* Botão para adicionar novo imóvel */}
-              <div className="mb-8 flex justify-end">
-                <Button
-                  onClick={() => {
-                    setShowForm(true);
-                    setEditingProperty(null);
-                    setImages([]);
-                    setImagePreviews([]);
-                    setSelectedAmenities([]);
-                    reset();
-                  }}
-                  size="lg"
-                  className="gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  Adicionar Novo Imóvel
-                </Button>
-              </div>
-
               {/* Lista de Imóveis */}
               {properties.length === 0 ? (
                 <Card className="p-12">
