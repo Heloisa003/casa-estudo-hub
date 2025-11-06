@@ -767,8 +767,139 @@ const Dashboard = () => {
 
                 {/* Profile */}
                 <TabsContent value="profile" className="space-y-6">
-                  <h2 className="text-xl font-semibold">Meu Perfil</h2>
-                  <ProfileEditForm />
+                  <h2 className="text-xl font-semibold mb-6">Meu Perfil</h2>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Formulário de Edição */}
+                    <div>
+                      <ProfileEditForm />
+                    </div>
+
+                    {/* Informações Adicionais e Estatísticas */}
+                    <div className="space-y-6">
+                      {/* Informações da Conta */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Informações da Conta</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Email</p>
+                            <p className="font-medium">{user?.email}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Tipo de Conta</p>
+                            <Badge variant="secondary">
+                              {userType === 'student' ? 'Estudante' : 'Proprietário'}
+                            </Badge>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Membro desde</p>
+                            <p className="font-medium">
+                              {profile?.created_at 
+                                ? new Date(profile.created_at).toLocaleDateString('pt-BR', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                  })
+                                : 'Data não disponível'}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Estatísticas do Perfil */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Estatísticas</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Heart className="w-4 h-4 text-accent" />
+                              <span className="text-sm">Favoritos</span>
+                            </div>
+                            <Badge variant="outline">{favorites.length}</Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <MessageCircle className="w-4 h-4 text-secondary" />
+                              <span className="text-sm">Conversas</span>
+                            </div>
+                            <Badge variant="outline">{conversations.length}</Badge>
+                          </div>
+                          {userType === 'student' && (
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Star className="w-4 h-4 text-accent" />
+                                <span className="text-sm">Avaliação</span>
+                              </div>
+                              <Badge variant="outline">4.9 ⭐</Badge>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Atividades Recentes do Perfil */}
+                      {recentActivities.length > 0 && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Atividade Recente</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {recentActivities.slice(0, 3).map((activity, index) => {
+                              const Icon = activity.icon;
+                              return (
+                                <div key={index} className="flex items-start space-x-3 pb-3 border-b last:border-0 last:pb-0">
+                                  <div className={`w-8 h-8 rounded-full ${activity.color} flex items-center justify-center flex-shrink-0`}>
+                                    <Icon className="w-4 h-4 text-white" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{activity.title}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatDistanceToNow(new Date(activity.time), { 
+                                        addSuffix: true,
+                                        locale: ptBR 
+                                      })}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Ações Rápidas */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Ações Rápidas</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <Button variant="outline" className="w-full justify-start" asChild>
+                            <a href="/search">
+                              <Home className="w-4 h-4 mr-2" />
+                              Explorar Imóveis
+                            </a>
+                          </Button>
+                          <Button variant="outline" className="w-full justify-start" asChild>
+                            <a href="/messages">
+                              <MessageCircle className="w-4 h-4 mr-2" />
+                              Minhas Mensagens
+                            </a>
+                          </Button>
+                          {userType === 'owner' && (
+                            <Button variant="outline" className="w-full justify-start" asChild>
+                              <a href="/add-property">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Cadastrar Imóvel
+                              </a>
+                            </Button>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>
