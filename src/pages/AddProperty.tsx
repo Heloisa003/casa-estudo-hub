@@ -546,20 +546,9 @@ const AddProperty = () => {
                   <div className="text-center">
                     <Home className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
                     <h3 className="text-xl font-semibold mb-2">Nenhum imóvel cadastrado</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Comece adicionando seu primeiro imóvel à plataforma
+                    <p className="text-muted-foreground">
+                      Você ainda não possui imóveis cadastrados na plataforma
                     </p>
-                    <Button onClick={() => {
-                      setShowForm(true);
-                      setEditingProperty(null);
-                      setImages([]);
-                      setImagePreviews([]);
-                      setSelectedAmenities([]);
-                      reset();
-                    }} className="gap-2">
-                      <Plus className="w-4 h-4" />
-                      Cadastrar Primeiro Imóvel
-                    </Button>
                   </div>
                 </Card>
               ) : (
