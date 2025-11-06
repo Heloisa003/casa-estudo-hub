@@ -17,12 +17,15 @@ import {
 import studentRoom1 from "@/assets/student-room-1.jpg";
 import studentRoom2 from "@/assets/student-room-2.jpg";
 import { mockProperties } from "@/data/mockProperties";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { favorites, toggleFavorite } = useFavorites();
   const [profile, setProfile] = useState<any | null>(null);
   const [favoriteProperties, setFavoriteProperties] = useState<any[]>([]);
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const userType: 'student' | 'owner' = profile?.user_type === 'owner' ? 'owner' : 'student';
 
   useEffect(() => {
@@ -37,6 +40,124 @@ const Dashboard = () => {
     };
     load();
   }, [user]);
+
+  // Carregar atividades recentes
+  useEffect(() => {
+    const loadRecentActivities = async () => {
+      if (!user) return;
+
+      const activities: any[] = [];
+
+      // Buscar últimas mensagens recebidas
+      const { data: recentMessages } = await supabase
+        .from('messages')
+        .select(`
+          id,
+          content,
+          created_at,
+          sender_id,
+          profiles!messages_sender_id_fkey(full_name)
+        `)
+        .neq('sender_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (recentMessages) {
+        recentMessages.forEach(msg => {
+          activities.push({
+            type: 'message',
+            icon: MessageCircle,
+            color: 'bg-secondary',
+            title: `Nova mensagem de ${(msg.profiles as any)?.full_name || 'Usuário'}`,
+            time: msg.created_at,
+          });
+        });
+      }
+
+      // Buscar últimos favoritos adicionados
+      const { data: recentFavorites } = await supabase
+        .from('favorites')
+        .select(`
+          id,
+          created_at,
+          properties(title)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (recentFavorites) {
+        recentFavorites.forEach(fav => {
+          activities.push({
+            type: 'favorite',
+            icon: Heart,
+            color: 'bg-accent',
+            title: `Favoritou: ${(fav.properties as any)?.title || 'Propriedade'}`,
+            time: fav.created_at,
+          });
+        });
+      }
+
+      // Buscar últimas visualizações de propriedades (se for proprietário)
+      if (userType === 'owner') {
+        const { data: recentViews } = await supabase
+          .from('property_views')
+          .select(`
+            id,
+            created_at,
+            properties!inner(owner_id, title)
+          `)
+          .eq('properties.owner_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (recentViews) {
+          recentViews.forEach(view => {
+            activities.push({
+              type: 'view',
+              icon: Eye,
+              color: 'bg-blue-500',
+              title: `Visualização em: ${(view.properties as any)?.title || 'Propriedade'}`,
+              time: view.created_at,
+            });
+          });
+        }
+      }
+
+      // Buscar últimas reservas
+      const { data: recentBookings } = await supabase
+        .from('bookings')
+        .select(`
+          id,
+          created_at,
+          status,
+          properties(title)
+        `)
+        .or(`tenant_id.eq.${user.id},properties.owner_id.eq.${user.id}`)
+        .order('created_at', { ascending: false })
+        .limit(2);
+
+      if (recentBookings) {
+        recentBookings.forEach(booking => {
+          activities.push({
+            type: 'booking',
+            icon: Calendar,
+            color: 'bg-green-500',
+            title: `Reserva ${booking.status}: ${(booking.properties as any)?.title || 'Propriedade'}`,
+            time: booking.created_at,
+          });
+        });
+      }
+
+      // Ordenar todas as atividades por data
+      activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+      // Limitar a 5 atividades mais recentes
+      setRecentActivities(activities.slice(0, 5));
+    };
+
+    loadRecentActivities();
+  }, [user, userType]);
 
   // Carregar propriedades favoritadas do banco de dados
   useEffect(() => {
@@ -551,27 +672,32 @@ const Dashboard = () => {
                   <CardTitle>Atividade Recente</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-secondary rounded-full" />
-                    <div className="text-sm">
-                      <p className="font-medium">Nova mensagem de Maria Santos</p>
-                      <p className="text-muted-foreground">2 minutos atrás</p>
+                  {recentActivities.length === 0 ? (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <p className="text-sm">Nenhuma atividade recente</p>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-accent rounded-full" />
-                    <div className="text-sm">
-                      <p className="font-medium">Propriedade favoritada</p>
-                      <p className="text-muted-foreground">1 hora atrás</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-muted-foreground rounded-full" />
-                    <div className="text-sm">
-                      <p className="font-medium">Perfil visualizado 5 vezes</p>
-                      <p className="text-muted-foreground">Hoje</p>
-                    </div>
-                  </div>
+                  ) : (
+                    recentActivities.map((activity, index) => {
+                      const Icon = activity.icon;
+                      return (
+                        <div key={index} className="flex items-start space-x-3">
+                          <div className={`w-2 h-2 ${activity.color} rounded-full mt-2`} />
+                          <div className="flex-1 text-sm">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="font-medium flex-1">{activity.title}</p>
+                              <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            </div>
+                            <p className="text-muted-foreground">
+                              {formatDistanceToNow(new Date(activity.time), { 
+                                addSuffix: true,
+                                locale: ptBR 
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </CardContent>
               </Card>
             </div>
