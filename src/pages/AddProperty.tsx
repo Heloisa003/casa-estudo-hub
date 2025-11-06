@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Upload, X, Home, TrendingUp, DollarSign, Users, Eye, Plus, MapPin, Bed, Bath, Power, Edit, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -78,6 +79,7 @@ const AddProperty = () => {
     monthlyRevenue: 0,
     occupancyRate: 0
   });
+  const [profile, setProfile] = useState<any>(null);
 
   const {
     register,
@@ -96,8 +98,26 @@ const AddProperty = () => {
     if (user) {
       loadStats();
       loadProperties();
+      loadProfile();
     }
   }, [user]);
+
+  const loadProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error: any) {
+      console.error("Erro ao carregar perfil:", error);
+    }
+  };
 
   const loadStats = async () => {
     if (!user) return;
@@ -434,6 +454,16 @@ const AddProperty = () => {
           </Button>
 
           <div className="text-center mb-8">
+            {/* Avatar do Usuário */}
+            <div className="flex justify-center mb-6">
+              <Avatar className="w-24 h-24 border-4 border-primary/20">
+                <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "Usuário"} />
+                <AvatarFallback className="text-2xl bg-gradient-primary text-primary-foreground">
+                  {profile?.full_name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+
             <h1 className="text-4xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
               {showForm ? (editingProperty ? "Editar Imóvel" : "Cadastrar Novo Imóvel") : "Meus Imóveis"}
             </h1>
