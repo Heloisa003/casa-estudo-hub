@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
 import SearchBar from "./SearchBar";
 import heroImage from "@/assets/hero-image.jpg";
-import { useStats } from "@/hooks/useStats";
 
 const Hero = () => {
-  const stats = useStats();
 
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-hero overflow-hidden">
@@ -31,28 +29,6 @@ const Hero = () => {
               Plataforma completa para encontrar imóveis, repúblicas 
               e vagas próximas à sua universidade
             </p>
-          </div>
-
-          {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-8 text-white/90 px-4">
-            <div className="text-center min-w-[100px]">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold">
-                {stats.loading ? "..." : stats.students}
-              </div>
-              <div className="text-xs sm:text-sm">Estudantes ativos</div>
-            </div>
-            <div className="text-center min-w-[100px]">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold">
-                {stats.loading ? "..." : stats.properties}
-              </div>
-              <div className="text-xs sm:text-sm">Imóveis disponíveis</div>
-            </div>
-            <div className="text-center min-w-[100px]">
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold">
-                {stats.loading ? "..." : stats.cities}
-              </div>
-              <div className="text-xs sm:text-sm">Cidades atendidas</div>
-            </div>
           </div>
 
           {/* Search Bar */}
